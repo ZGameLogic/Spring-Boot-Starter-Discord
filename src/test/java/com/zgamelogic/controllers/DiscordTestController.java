@@ -1,4 +1,4 @@
-package com.zgamelogic.autoconfigure;
+package com.zgamelogic.controllers;
 
 import com.zgamelogic.annotations.DiscordController;
 import lombok.extern.slf4j.Slf4j;

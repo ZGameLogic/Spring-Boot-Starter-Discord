@@ -1,6 +1,6 @@
 {
   "properties": [{
-      "name": "bot.token",
+      "name": "discord.token",
       "type": "java.lang.String",
       "description": "Discord Bot token."
   }]
