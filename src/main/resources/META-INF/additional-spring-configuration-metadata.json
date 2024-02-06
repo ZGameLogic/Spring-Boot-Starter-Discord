@@ -6,15 +6,18 @@
   },{
     "name": "discord.gateway-intents",
     "type": "java.lang.String[]",
-    "description": "Intents for gateways for the discord bot."
+    "description": "Intents for gateways for the discord bot.",
+    "defaultValue": []
   },{
     "name": "discord.cache-flags",
     "type": "java.lang.String[]",
-    "description": "Discord bot cache policy."
+    "description": "Discord bot cache policy.",
+    "defaultValue": []
   },{
     "name": "discord.member-cache-policy",
     "type": "java.lang.String",
-    "description": "Discord bot member cache policy."
+    "description": "Discord bot member cache policy.",
+    "defaultValue": ""
   }],
   "hints": [{
     "name": "discord.gateway-intents",

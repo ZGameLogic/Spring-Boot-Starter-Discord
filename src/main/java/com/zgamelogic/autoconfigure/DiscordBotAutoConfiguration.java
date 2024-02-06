@@ -14,17 +14,22 @@ import org.springframework.context.annotation.Configuration;
 public class DiscordBotAutoConfiguration {
     public DiscordBotAutoConfiguration(DiscordBotProperties properties, ApplicationContext context){
         JDABuilder builder = JDABuilder.createDefault(properties.getToken());
-        for(String intent: properties.getGatewayIntents()){
-            PropsToBuilder.stringToIntent(intent).ifPresentOrElse(builder::enableIntents,
-            () -> log.warn("Unable to decode {} gateway intent", intent));
+        if(properties.getGatewayIntents() != null) {
+            for (String intent : properties.getGatewayIntents()) {
+                PropsToBuilder.stringToIntent(intent).ifPresentOrElse(builder::enableIntents,
+                        () -> log.warn("Unable to decode {} gateway intent", intent));
+            }
         }
-        for(String cacheFlag: properties.getCacheFlags()){
-            PropsToBuilder.stringToCache(cacheFlag).ifPresentOrElse(builder::enableCache,
-            () -> log.warn("Unable to decode {} cache flag", cacheFlag));
+        if(properties.getCacheFlags() != null) {
+            for (String cacheFlag : properties.getCacheFlags()) {
+                PropsToBuilder.stringToCache(cacheFlag).ifPresentOrElse(builder::enableCache,
+                        () -> log.warn("Unable to decode {} cache flag", cacheFlag));
+            }
         }
-        PropsToBuilder.stringToMemberCachePolicy(properties.getMemberCachePolicy()).ifPresentOrElse(builder::setMemberCachePolicy,
-            () -> log.warn("Unable to decode {} member cache policy", properties.getMemberCachePolicy()));
-
+        if(properties.getMemberCachePolicy() != null) {
+            PropsToBuilder.stringToMemberCachePolicy(properties.getMemberCachePolicy()).ifPresentOrElse(builder::setMemberCachePolicy,
+                    () -> log.warn("Unable to decode {} member cache policy", properties.getMemberCachePolicy()));
+        }
         builder.setEventPassthrough(properties.isEventPassthrough());
 
         context.getBeansWithAnnotation(DiscordController.class).forEach((controllerClassName, controllerObject) -> {
