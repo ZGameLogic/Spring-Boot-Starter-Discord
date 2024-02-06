@@ -3,5 +3,106 @@
       "name": "discord.token",
       "type": "java.lang.String",
       "description": "Discord Bot token."
+  },{
+    "name": "discord.gateway-intents",
+    "type": "java.lang.String[]",
+    "description": "Intents for gateways for the discord bot."
+  },{
+    "name": "discord.cache-flags",
+    "type": "java.lang.String[]",
+    "description": "Discord bot cache policy."
+  },{
+    "name": "discord.member-cache-policy",
+    "type": "java.lang.String",
+    "description": "Discord bot member cache policy."
+  }],
+  "hints": [{
+    "name": "discord.gateway-intents",
+    "values": [{
+      "value": "GUILD_MEMBERS"
+    },{
+      "value": "GUILD_BANS"
+    },{
+      "value": "GUILD_MODERATION"
+    },{
+      "value": "GUILD_EMOJIS_AND_STICKERS"
+    },{
+      "value": "GUILD_WEBHOOKS"
+    },{
+      "value": "GUILD_INVITES"
+    },{
+      "value": "GUILD_VOICE_STATES"
+    },{
+      "value": "GUILD_PRESENCES"
+    },{
+      "value": "GUILD_MESSAGES"
+    },{
+      "value": "GUILD_MESSAGE_REACTIONS"
+    },{
+      "value": "GUILD_MESSAGE_TYPING"
+    },{
+      "value": "DIRECT_MESSAGES"
+    },{
+      "value": "DIRECT_MESSAGE_REACTIONS"
+    },{
+      "value": "DIRECT_MESSAGE_TYPING"
+    },{
+      "value": "MESSAGE_CONTENT"
+    },{
+      "value": "SCHEDULED_EVENTS"
+    },{
+      "value": "AUTO_MODERATION_CONFIGURATION"
+    },{
+      "value": "AUTO_MODERATION_EXECUTION"
+    }]
+  },{
+    "name": "discord.cache-flags",
+    "values": [{
+      "value": "ACTIVITY"
+    },{
+      "value": "VOICE_STATE"
+    },{
+      "value": "EMOJI"
+    },{
+      "value": "STICKER"
+    },{
+      "value": "CLIENT_STATUS"
+    },{
+      "value": "MEMBER_OVERRIDES"
+    },{
+      "value": "ROLE_TAGS"
+    },{
+      "value": "FORUM_TAGS"
+    },{
+      "value": "ONLINE_STATUS"
+    },{
+      "value": "SCHEDULED_EVENTS"
+    }]
+  },{
+    "name": "discord.member-cache-policy",
+    "values": [{
+      "value": "NONE"
+    },{
+      "value": "ALL"
+    },{
+      "value": "OWNER"
+    },{
+      "value": "ONLINE"
+    },{
+      "value": "VOICE"
+    },{
+      "value": "BOOSTER"
+    },{
+      "value": "PENDING"
+    },{
+      "value": "DEFAULT"
+    }]
+  },{
+    "name": "discord.event-passthrough",
+    "values": [{
+      "value": "true"
+    },{
+      "value": "false"
+    }]
   }]
 }

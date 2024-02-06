@@ -9,4 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "discord")
 public class DiscordBotProperties {
     private String token;
+    private String[] gatewayIntents;
+    private String[] cacheFlags;
+    private String memberCachePolicy;
+    private boolean eventPassthrough;
 }
