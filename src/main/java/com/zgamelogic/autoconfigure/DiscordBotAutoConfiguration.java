@@ -1,12 +1,15 @@
 package com.zgamelogic.autoconfigure;
 
 import com.zgamelogic.annotations.DiscordController;
+import com.zgamelogic.annotations.DiscordMapping;
 import com.zgamelogic.helpers.PropsToBuilder;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDABuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
+
+import java.lang.reflect.Method;
 
 @Configuration
 @Slf4j
@@ -32,14 +35,15 @@ public class DiscordBotAutoConfiguration {
         }
         builder.setEventPassthrough(properties.isEventPassthrough());
 
+        DiscordListener listener = new DiscordListener();
         context.getBeansWithAnnotation(DiscordController.class).forEach((controllerClassName, controllerObject) -> {
-            /*
-             * TODO for each controller class
-             *      extract each method
-             *      add it to a special listener adapter for discord
-             *      determine when that should be called based on rules
-             */
+            for(Method method: controllerObject.getClass().getDeclaredMethods()){
+                if(!method.isAnnotationPresent(DiscordMapping.class)) continue;
+                listener.addObjectMethod(controllerObject, method);
+            }
         });
+
+        builder.addEventListeners(listener);
 
         try {
             builder.build().awaitReady();
