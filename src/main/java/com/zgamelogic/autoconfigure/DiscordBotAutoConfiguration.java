@@ -11,10 +11,24 @@ import org.springframework.context.annotation.Configuration;
 
 import java.lang.reflect.Method;
 
+/**
+ * Autoconfiguration class for the Discord bot.
+ * This will also register all methods for the custom discord listener so that they get called on that specific event
+ * @author Ben Shabowski
+ * @since 1.0.0
+ */
 @Configuration
 @Slf4j
 @EnableConfigurationProperties(DiscordBotProperties.class)
 public class DiscordBotAutoConfiguration {
+
+    /**
+     * Creates a configuration with specific properties and application contexts
+     * @param properties Properties to create the bot builder with
+     * @param context Application context that holds all the discord controllers
+     * @author Ben Shabowski
+     * @since 1.0.0
+     */
     public DiscordBotAutoConfiguration(DiscordBotProperties properties, ApplicationContext context){
         JDABuilder builder = JDABuilder.createDefault(properties.getToken());
         if(properties.getGatewayIntents() != null) {

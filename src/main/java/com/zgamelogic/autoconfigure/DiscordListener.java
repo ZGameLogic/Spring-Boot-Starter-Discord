@@ -3,7 +3,6 @@ package com.zgamelogic.autoconfigure;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.internal.utils.ClassWalker;
 
@@ -32,10 +31,6 @@ class DiscordListener implements EventListener {
     @Override
     public void onEvent(GenericEvent event) {
         for (Class<?> clazz : ClassWalker.range(event.getClass(), GenericEvent.class)) {
-//            if(clazz.equals(MessageReceivedEvent.class)){
-//                MessageReceivedEvent e = (MessageReceivedEvent) event;
-//                System.out.println(e.getMessage().getContentRaw());
-//            }
             if(methods.containsKey(clazz)){
                 methods.get(clazz).forEach(objectMethod -> {
                     objectMethod.method.setAccessible(true);
