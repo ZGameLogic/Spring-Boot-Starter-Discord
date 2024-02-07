@@ -1,14 +1,17 @@
 package com.zgamelogic.autoconfigure;
 
+import com.zgamelogic.annotations.Bot;
 import com.zgamelogic.annotations.DiscordController;
 import com.zgamelogic.annotations.DiscordMapping;
 import com.zgamelogic.helpers.PropsToBuilder;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
@@ -48,12 +51,20 @@ public class DiscordBotAutoConfiguration {
                     () -> log.warn("Unable to decode {} member cache policy", properties.getMemberCachePolicy()));
         }
         builder.setEventPassthrough(properties.isEventPassthrough());
-
         DiscordListener listener = new DiscordListener();
         context.getBeansWithAnnotation(DiscordController.class).forEach((controllerClassName, controllerObject) -> {
             for(Method method: controllerObject.getClass().getDeclaredMethods()){
                 if(!method.isAnnotationPresent(DiscordMapping.class)) continue;
                 listener.addObjectMethod(controllerObject, method);
+            }
+            for(Field field: controllerObject.getClass().getDeclaredFields()){
+                if(field.isAnnotationPresent(Bot.class)){
+                    if(field.getType() != JDA.class) {
+                        log.error("@Bot fields must be of type JDA");
+                        throw new RuntimeException("@Bot fields must be of type JDA");
+                    }
+                    listener.addReadyObjectField(controllerObject, field);
+                }
             }
         });
 

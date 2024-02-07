@@ -1,5 +1,6 @@
 package com.zgamelogic.controllers;
 
+import com.zgamelogic.annotations.Bot;
 import com.zgamelogic.annotations.DiscordController;
 import com.zgamelogic.annotations.DiscordMapping;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @DiscordController
 @Slf4j
 public class DiscordTestController {
-
+    @Bot
     private JDA bot;
 
     @Autowired
@@ -33,7 +34,6 @@ public class DiscordTestController {
 
     @DiscordMapping
     private void onLogin(ReadyEvent event){
-        bot = event.getJDA();
         System.out.println(bot.getSelfUser().getName());
     }
 }
