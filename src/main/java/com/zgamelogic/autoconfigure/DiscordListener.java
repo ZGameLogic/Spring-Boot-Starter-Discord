@@ -1,9 +1,13 @@
 package com.zgamelogic.autoconfigure;
 
+import com.zgamelogic.annotations.DiscordMapping;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.internal.utils.ClassWalker;
@@ -18,10 +22,42 @@ public class DiscordListener implements EventListener {
 
     private final Map<Class<?>, List<ObjectMethod>> methods;
     private final List<ObjectField> botVars;
+    private final List<Invalidation> invalidations;
+    private boolean ready;
 
     public DiscordListener(){
+        ready = false;
         methods = new HashMap<>();
         botVars = new LinkedList<>();
+        invalidations = new LinkedList<>();
+        // Autocomplete interactions
+        invalidations.add((annotation, event) -> {
+            try {
+                CommandAutoCompleteInteractionEvent e = (CommandAutoCompleteInteractionEvent) event;
+                if (!annotation.Id().isEmpty() && !annotation.Id().equals(e.getName())) return true;
+                if (!annotation.SubId().isEmpty() && !annotation.Id().equals(e.getSubcommandName())) return true;
+                if (!annotation.FocusedOption().isEmpty() && !annotation.FocusedOption().equals(e.getFocusedOption().getName()))
+                    return true;
+            } catch (Exception ignored) {}
+            return false;
+        });
+        // Slash commands
+        invalidations.add((annotation, event) -> {
+            try {
+                GenericCommandInteractionEvent e = (GenericCommandInteractionEvent) event;
+                if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getName())) return true;
+                if(!annotation.SubId().isEmpty() && !annotation.Id().equals(e.getSubcommandName())) return true;
+            } catch (Exception ignored) {}
+            return false;
+        });
+        // Modals
+        invalidations.add((annotation, event) -> {
+            try {
+                ModalInteractionEvent e = (ModalInteractionEvent) event;
+                if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getModalId())) return true;
+            } catch (Exception ignored) {}
+            return false;
+        });
     }
 
     public void addObjectMethod(Object object, Method method){
@@ -34,7 +70,7 @@ public class DiscordListener implements EventListener {
         if(methods.containsKey(clazz)){
             methods.get(clazz).add(new ObjectMethod(object, method));
         } else {
-            methods.put(clazz, Collections.singletonList(new ObjectMethod(object, method)));
+            methods.put(clazz, new LinkedList<>(List.of(new ObjectMethod(object, method))));
         }
     }
 
@@ -45,7 +81,8 @@ public class DiscordListener implements EventListener {
     @Override
     public void onEvent(GenericEvent event) {
         for (Class<?> clazz : ClassWalker.range(event.getClass(), GenericEvent.class)) {
-            if(clazz == ReadyEvent.class){
+            if(!ready && clazz == ReadyEvent.class){
+                ready = true;
                 botVars.forEach(objectField -> {
                     try {
                         objectField.getField().setAccessible(true);
@@ -54,11 +91,14 @@ public class DiscordListener implements EventListener {
                         throw new RuntimeException(e);
                     }
                 });
+                botVars.clear();
             }
             if(methods.containsKey(clazz)){
                 methods.get(clazz).forEach(objectMethod -> {
                     objectMethod.method.setAccessible(true);
                     try {
+                        DiscordMapping annotation = objectMethod.method.getAnnotation(DiscordMapping.class);
+                        for(Invalidation invalidation: invalidations) if(invalidation.isInvalid(annotation, event)) return;
                         objectMethod.method.invoke(objectMethod.object, event);
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);
@@ -80,5 +120,9 @@ public class DiscordListener implements EventListener {
     private static class ObjectField {
         private Object object;
         private Field field;
+    }
+
+    private interface Invalidation {
+        boolean isInvalid(DiscordMapping annotation, GenericEvent event);
     }
 }

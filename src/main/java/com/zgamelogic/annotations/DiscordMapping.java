@@ -14,8 +14,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface DiscordMapping {
-    // slash command options
-    String SlashCommandId() default "";
-    String SlashCommandSubId() default "";
-    String SlashCommandFocusedOption() default "";
+    String Id() default "";
+    String SubId() default "";
+    String FocusedOption() default "";
 }
