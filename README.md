@@ -39,5 +39,8 @@ public class DiscordListener {
 }
 ```
 
+## Example project
+Here is a small [example project](https://github.com/ZGameLogic/Spring-Boot-Starter-Discord-Example) that will show you some of the ropes.
+
 ### Extra information
 You can annotate any `@DiscordController` JDA field with `@Bot` to have it auto-injected __after__ the bot is logged in.
