@@ -38,3 +38,6 @@ public class DiscordListener {
     }
 }
 ```
+
+### Extra information
+You can annotate any `@DiscordController` JDA field with `@Bot` to have it auto-injected __after__ the bot is logged in.
