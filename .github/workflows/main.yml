@@ -19,7 +19,20 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Get previous version
+        id: get_previous_version
+        run: echo "::set-output name=prev_version::$(git show ${{ github.event.before }}:pom.xml | grep -oP '(?<=<version>)[^<]+' || echo 'notfound')"
+
+      - name: Get current version
+        id: get_current_version
+        run: echo "::set-output name=current_version::$(grep -oP '(?<=<version>)[^<]+' pom.xml || echo 'notfound')"
+
+      - name: Compare versions
+        id: compare_versions
+        run: echo "::set-output name=version_changed::$(test ${{ steps.get_previous_version.outputs.prev_version }} != ${{ steps.get_current_version.outputs.current_version }} && echo 'true' || echo 'false')"
+
       - name: Publish to GitHub Packages Apache Maven
+        if: steps.compare_versions.outputs.version_changed == 'true'
         run: mvn javadoc:jar deploy
         env:
           GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
