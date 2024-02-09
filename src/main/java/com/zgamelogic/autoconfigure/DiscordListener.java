@@ -8,6 +8,8 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.internal.utils.ClassWalker;
@@ -41,7 +43,7 @@ public class DiscordListener implements EventListener {
             } catch (Exception ignored) {}
             return false;
         });
-        // Slash commands
+        // interaction commands
         invalidations.add((annotation, event) -> {
             try {
                 GenericCommandInteractionEvent e = (GenericCommandInteractionEvent) event;
@@ -55,6 +57,31 @@ public class DiscordListener implements EventListener {
             try {
                 ModalInteractionEvent e = (ModalInteractionEvent) event;
                 if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getModalId())) return true;
+            } catch (Exception ignored) {}
+            return false;
+        });
+        // Buttons
+        invalidations.add((annotation, event) -> {
+            try {
+                ButtonInteractionEvent e = (ButtonInteractionEvent) event;
+                if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getButton().getId())) return true;
+            } catch (Exception ignored) {}
+            return false;
+        });
+        // String select interaction
+        invalidations.add((annotation, event) -> {
+            try {
+                StringSelectInteractionEvent e = (StringSelectInteractionEvent) event;
+                if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getSelectMenu().getId())) return true;
+                if(!annotation.FocusedOption().isEmpty() && !annotation.FocusedOption().equals(e.getInteraction().getSelectedOptions().get(0).getValue())) return true;
+            } catch (Exception ignored) {}
+            return false;
+        });
+        // Entity select interaction
+        invalidations.add((annotation, event) -> {
+            try {
+                StringSelectInteractionEvent e = (StringSelectInteractionEvent) event;
+                if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getSelectMenu().getId())) return true;
             } catch (Exception ignored) {}
             return false;
         });
