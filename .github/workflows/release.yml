@@ -1,11 +1,11 @@
 name: Spring-Boot-Starter-Discord
 
 on:
-  push:
-    branches: [master]
+  release:
+    types: [created]
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
