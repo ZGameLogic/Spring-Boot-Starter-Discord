@@ -19,6 +19,19 @@
                     <nohelp>true</nohelp>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -49,9 +62,9 @@
 
     <distributionManagement>
         <repository>
-            <id>github</id>
-            <name>GitHub ZGameLogic Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/ZGameLogic/Spring-Boot-Starter-Discord</url>
+            <id>ossrh</id>
+            <name>Central Repository OSSRH</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
 
