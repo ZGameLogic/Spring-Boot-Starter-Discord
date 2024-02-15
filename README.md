@@ -23,7 +23,7 @@ discord.member-cache-policy
 discord.event-passthrough
 ```
 5. To create a controller for discord events, annotate a class with `@DiscordController`
-6. To create a method to handle an event, add the `@DicordMapping` annotation over it. This method must include __one__ JDA event parameter to listen for. The annotation can also include Ids to filter out other calls and only handle the one in that singular method. Here is a button for example:
+6. To create a method to handle an event, add the `@DiscordMapping` annotation over it. This method must include __one__ JDA event parameter to listen for. The annotation can also include Ids to filter out other calls and only handle the one in that singular method. Here is a button for example:
 
 ```java
 import com.zgamelogic.annotations.DiscordController;
