@@ -7,7 +7,7 @@ Spring boot starter discord is a spring initializer that integrates [JDA](https:
 <dependency>
   <groupId>com.zgamelogic</groupId>
   <artifactId>spring-boot-starter-discord</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.3</version>
 </dependency>
 ```
 2. Get a discord application setup in the [Discord developer portal](https://discord.com/developers/) and get a bot token.
@@ -44,3 +44,15 @@ Here is a small [example project](https://github.com/ZGameLogic/Spring-Boot-Star
 
 ### Extra information
 You can annotate any `@DiscordController` JDA field with `@Bot` to have it auto-injected __after__ the bot is logged in.
+
+```java
+import com.zgamelogic.annotations.Bot;
+import com.zgamelogic.annotations.DiscordController;
+import net.dv8tion.jda.api.JDA;
+
+@DiscordController
+public class DiscordListener {
+    @Bot
+    private JDA bot;
+}
+```
