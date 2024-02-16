@@ -7,12 +7,16 @@ import com.zgamelogic.helpers.PropsToBuilder;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Autoconfiguration class for the Discord bot.
@@ -32,7 +36,7 @@ public class DiscordBotAutoConfiguration {
      * @author Ben Shabowski
      * @since 1.0.0
      */
-    public DiscordBotAutoConfiguration(DiscordBotProperties properties, ApplicationContext context){
+    public DiscordBotAutoConfiguration(DiscordBotProperties properties, ApplicationContext context, ListableBeanFactory beans){
         JDABuilder builder = JDABuilder.createDefault(properties.getToken());
         if(properties.getGatewayIntents() != null) {
             for (String intent : properties.getGatewayIntents()) {
@@ -71,7 +75,17 @@ public class DiscordBotAutoConfiguration {
         builder.addEventListeners(listener);
 
         try {
-            builder.build().awaitReady();
+            JDA bot = builder.build().awaitReady();
+            List<CommandData> commandData = new LinkedList<>(beans.getBeansOfType(CommandData.class).values());
+            beans.getBeansOfType(List.class).values().forEach(list -> {
+                if(!list.isEmpty() && list.get(0) instanceof CommandData){
+                    list.stream().filter(item -> item instanceof CommandData).forEach(command -> commandData.add((CommandData) command));
+                }
+            });
+            commandData.forEach(command -> System.out.println(command.getName()));
+            if(!commandData.isEmpty()) {
+                bot.updateCommands().addCommands(commandData).queue();
+            }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
