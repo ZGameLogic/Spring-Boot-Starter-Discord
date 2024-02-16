@@ -82,7 +82,6 @@ public class DiscordBotAutoConfiguration {
                     list.stream().filter(item -> item instanceof CommandData).forEach(command -> commandData.add((CommandData) command));
                 }
             });
-            commandData.forEach(command -> System.out.println(command.getName()));
             if(!commandData.isEmpty()) {
                 bot.updateCommands().addCommands(commandData).queue();
             }
