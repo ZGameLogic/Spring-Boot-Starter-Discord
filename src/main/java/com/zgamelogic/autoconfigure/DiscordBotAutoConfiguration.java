@@ -33,6 +33,7 @@ public class DiscordBotAutoConfiguration {
      * Creates a configuration with specific properties and application contexts
      * @param properties Properties to create the bot builder with
      * @param context Application context that holds all the discord controllers
+     * @param beans Listable Bean factory that holds the beans of command data to be auto-injected into the bot
      * @author Ben Shabowski
      * @since 1.0.0
      */

@@ -1,6 +1,13 @@
 # Spring Boot Starter Discord
 Spring boot starter discord is a spring initializer that integrates [JDA](https://github.com/discord-jda/JDA) into spring.
 
+## Compatability
+| Framework   |    Version     |
+|-------------|:--------------:|
+| Java        |      v21       |
+| Spring-Boot |     v3.2.2     |
+| JDA         | v5.0.0-beta.20 |
+
 ## Setup
 1. Add this dependency to your pom.xml file
 ```xml
@@ -40,7 +47,7 @@ public class DiscordListener {
 ```
 
 ## Example project
-Here is a small [example project](https://github.com/ZGameLogic/Spring-Boot-Starter-Discord-Example) that will show you some of the ropes.
+Here is a small [example project](https://github.com/ZGameLogic/Spring-Boot-Starter-Discord-Example) that will show you some of the ropes. This project also goes into more detail about Spring and JDA as a whole.
 
 ### Extra information
 You can annotate any `@DiscordController` JDA field with `@Bot` to have it auto-injected __after__ the bot is logged in.
