@@ -3,7 +3,7 @@ package com.zgamelogic.autoconfigure;
 import com.zgamelogic.annotations.Bot;
 import com.zgamelogic.annotations.DiscordController;
 import com.zgamelogic.annotations.DiscordMapping;
-import com.zgamelogic.helpers.PropsToBuilder;
+import com.zgamelogic.helpers.Translator;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -41,18 +41,18 @@ public class DiscordBotAutoConfiguration {
         JDABuilder builder = JDABuilder.createDefault(properties.getToken());
         if(properties.getGatewayIntents() != null) {
             for (String intent : properties.getGatewayIntents()) {
-                PropsToBuilder.stringToIntent(intent).ifPresentOrElse(builder::enableIntents,
+                Translator.stringToIntent(intent).ifPresentOrElse(builder::enableIntents,
                         () -> log.warn("Unable to decode {} gateway intent", intent));
             }
         }
         if(properties.getCacheFlags() != null) {
             for (String cacheFlag : properties.getCacheFlags()) {
-                PropsToBuilder.stringToCache(cacheFlag).ifPresentOrElse(builder::enableCache,
+                Translator.stringToCache(cacheFlag).ifPresentOrElse(builder::enableCache,
                         () -> log.warn("Unable to decode {} cache flag", cacheFlag));
             }
         }
         if(properties.getMemberCachePolicy() != null) {
-            PropsToBuilder.stringToMemberCachePolicy(properties.getMemberCachePolicy()).ifPresentOrElse(builder::setMemberCachePolicy,
+            Translator.stringToMemberCachePolicy(properties.getMemberCachePolicy()).ifPresentOrElse(builder::setMemberCachePolicy,
                     () -> log.warn("Unable to decode {} member cache policy", properties.getMemberCachePolicy()));
         }
         builder.setEventPassthrough(properties.isEventPassthrough());
