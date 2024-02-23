@@ -1,13 +1,17 @@
 package com.zgamelogic.autoconfigure;
 
 import com.zgamelogic.annotations.DiscordMapping;
+import com.zgamelogic.annotations.EventProperty;
+import com.zgamelogic.helpers.Translator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
@@ -17,6 +21,7 @@ import net.dv8tion.jda.internal.utils.ClassWalker;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.*;
 
 @Slf4j
@@ -87,12 +92,13 @@ public class DiscordListener implements EventListener {
     }
 
     public void addObjectMethod(Object object, Method method){
-        if(method.getParameterCount() != 1) {
+        List<Parameter> JDAParams = Arrays.stream(method.getParameters()).filter(parameter -> Event.class.isAssignableFrom(parameter.getType())).toList();
+        if(JDAParams.size() != 1){
             log.error("Error when mapping method: {}", method);
             log.error("Discord mappings must have one JDA event parameter.");
             throw new RuntimeException("Discord mappings must have one JDA event parameter");
         }
-        Class<?> clazz = method.getParameters()[0].getType();
+        Class<?> clazz = JDAParams.get(0).getType();
         if(methods.containsKey(clazz)){
             methods.get(clazz).add(new ObjectMethod(object, method));
         } else {
@@ -107,7 +113,7 @@ public class DiscordListener implements EventListener {
     @Override
     public void onEvent(GenericEvent event) {
         for (Class<?> clazz : ClassWalker.range(event.getClass(), GenericEvent.class)) {
-            if(!ready && clazz == ReadyEvent.class){
+            if(!ready && clazz == ReadyEvent.class){ // ready event for initialization to set all the bot vars
                 ready = true;
                 botVars.forEach(objectField -> {
                     try {
@@ -125,13 +131,38 @@ public class DiscordListener implements EventListener {
                     try {
                         DiscordMapping annotation = objectMethod.method.getAnnotation(DiscordMapping.class);
                         for(Invalidation invalidation: invalidations) if(invalidation.isInvalid(annotation, event)) return;
-                        objectMethod.method.invoke(objectMethod.object, event);
+                        List<Object> params = constructParameters(event, objectMethod.method);
+                        objectMethod.method.invoke(objectMethod.object, params.toArray());
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);
                     }
                 });
             }
         }
+    }
+
+    private List<Object> constructParameters(GenericEvent event, Method method){
+        List<Object> parameters = new LinkedList<>();
+        for(Parameter methodParam: method.getParameters()){
+            if(Event.class.isAssignableFrom(methodParam.getType())){
+                parameters.add(event);
+                continue;
+            }
+            if(methodParam.isAnnotationPresent(EventProperty.class)){
+                EventProperty annotation = methodParam.getAnnotation(EventProperty.class);
+                String name = annotation.name().isEmpty() ? methodParam.getName() : annotation.name();
+                if(event instanceof SlashCommandInteractionEvent slashEvent){
+                    Object o = Translator.eventOptionToObject(slashEvent.getOption(name));
+                    parameters.add(o);
+                    continue;
+                } else if(event instanceof ModalInteractionEvent modalEvent) {
+                    parameters.add(modalEvent.getValue(name) == null ? null : Objects.requireNonNull(modalEvent.getValue(name)).getAsString());
+                    continue;
+                }
+            }
+            parameters.add(null);
+        }
+        return parameters;
     }
 
     @Getter

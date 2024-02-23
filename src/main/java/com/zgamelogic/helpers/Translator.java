@@ -1,12 +1,13 @@
 package com.zgamelogic.helpers;
 
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import java.util.Optional;
 
-public abstract class PropsToBuilder {
+public abstract class Translator {
     public static Optional<GatewayIntent> stringToIntent(String string){
         string = string.toUpperCase().trim();
         return switch (string) {
@@ -61,5 +62,38 @@ public abstract class PropsToBuilder {
             case "DEFAULT" -> Optional.of(MemberCachePolicy.DEFAULT);
             default -> Optional.empty();
         };
+    }
+
+    public static Object eventOptionToObject(OptionMapping mapping){
+        if(mapping == null) return null;
+        switch(mapping.getType()){
+            case STRING -> {
+                return mapping.getAsString();
+            }
+            case INTEGER -> {
+                return mapping.getAsInt();
+            }
+            case BOOLEAN -> {
+                return mapping.getAsBoolean();
+            }
+            case USER -> {
+                return mapping.getAsUser();
+            }
+            case CHANNEL -> {
+                return mapping.getAsChannel();
+            }
+            case ROLE -> {
+                return mapping.getAsRole();
+            }
+            case MENTIONABLE -> {
+                return mapping.getAsMentionable();
+            }
+            case ATTACHMENT -> {
+                return mapping.getAsAttachment();
+            }
+            default -> {
+                return null;
+            }
+        }
     }
 }
