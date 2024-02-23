@@ -155,6 +155,10 @@ public class DiscordListener implements EventListener {
                     Object o = Translator.eventOptionToObject(slashEvent.getOption(name));
                     parameters.add(o);
                     continue;
+                } else if(event instanceof CommandAutoCompleteInteractionEvent autoCompleteEvent) {
+                    Object o = Translator.eventOptionToObject(autoCompleteEvent.getOption(name));
+                    parameters.add(o);
+                    continue;
                 } else if(event instanceof ModalInteractionEvent modalEvent) {
                     parameters.add(modalEvent.getValue(name) == null ? null : Objects.requireNonNull(modalEvent.getValue(name)).getAsString());
                     continue;

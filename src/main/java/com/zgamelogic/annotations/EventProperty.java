@@ -6,9 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation for method parameters to auto-map SlashCommandInteractionEvent options and ModelInteractionEvent options to method parameters when called.
+ * Annotation for method parameters to auto-map SlashCommandInteractionEvent options, AutoCompleteCommandInteractionEvent options, and ModelInteractionEvent options to method parameters when called.
  * If the command option is null, or the command does not contain that option, then the annotated method parameter will be null.
  * @see net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+ * @see net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
  * @see net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
  * @author Ben Shabowski
  * @since 1.2.0
