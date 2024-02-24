@@ -95,7 +95,7 @@ public class DiscordListener implements EventListener {
     public void addObjectMethod(Object object, Method method){
         List<Parameter> JDAParams = Arrays.stream(method.getParameters()).filter(parameter -> Event.class.isAssignableFrom(parameter.getType())).toList();
         if(JDAParams.size() != 1){
-            log.error("Error when mapping method: {}", method);
+            log.error("Error when mapping method: {}", method.getName());
             log.error("Discord mappings must have one JDA event parameter.");
             throw new RuntimeException("Discord mappings must have one JDA event parameter");
         }
