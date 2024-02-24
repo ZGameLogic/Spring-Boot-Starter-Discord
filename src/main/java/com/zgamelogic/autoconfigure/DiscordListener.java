@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
@@ -84,7 +85,7 @@ public class DiscordListener implements EventListener {
         // Entity select interaction
         invalidations.add((annotation, event) -> {
             try {
-                StringSelectInteractionEvent e = (StringSelectInteractionEvent) event;
+                EntitySelectInteractionEvent e = (EntitySelectInteractionEvent) event;
                 if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getSelectMenu().getId())) return true;
             } catch (Exception ignored) {}
             return false;
