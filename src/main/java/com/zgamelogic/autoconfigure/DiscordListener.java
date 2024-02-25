@@ -17,6 +17,8 @@ import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionE
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import net.dv8tion.jda.internal.utils.ClassWalker;
 
 import java.lang.reflect.Field;
@@ -153,14 +155,26 @@ public class DiscordListener implements EventListener {
                 EventProperty annotation = methodParam.getAnnotation(EventProperty.class);
                 String name = annotation.name().isEmpty() ? methodParam.getName() : annotation.name();
                 if(event instanceof SlashCommandInteractionEvent slashEvent){
+                    if(methodParam.getType() == OptionMapping.class){
+                         parameters.add(slashEvent.getOption(name));
+                         continue;
+                    }
                     Object o = Translator.eventOptionToObject(slashEvent.getOption(name));
                     parameters.add(o);
                     continue;
                 } else if(event instanceof CommandAutoCompleteInteractionEvent autoCompleteEvent) {
+                    if(methodParam.getType() == OptionMapping.class){
+                        parameters.add(autoCompleteEvent.getOption(name));
+                        continue;
+                    }
                     Object o = Translator.eventOptionToObject(autoCompleteEvent.getOption(name));
                     parameters.add(o);
                     continue;
                 } else if(event instanceof ModalInteractionEvent modalEvent) {
+                    if(methodParam.getType() == ModalMapping.class){
+                        parameters.add(modalEvent.getValue(name));
+                        continue;
+                    }
                     parameters.add(modalEvent.getValue(name) == null ? null : Objects.requireNonNull(modalEvent.getValue(name)).getAsString());
                     continue;
                 }
