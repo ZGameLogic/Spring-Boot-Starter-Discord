@@ -102,6 +102,7 @@ public class DiscordListener implements EventListener {
             throw new RuntimeException("Discord mappings must have one JDA event parameter");
         }
         Class<?> clazz = JDAParams.get(0).getType();
+        log.debug("Adding {} listener: {}", clazz.getName(), method.getName());
         if(methods.containsKey(clazz)){
             methods.get(clazz).add(new ObjectMethod(object, method));
         } else {
@@ -135,6 +136,7 @@ public class DiscordListener implements EventListener {
                         DiscordMapping annotation = objectMethod.method.getAnnotation(DiscordMapping.class);
                         for(Invalidation invalidation: invalidations) if(invalidation.isInvalid(annotation, event)) return;
                         List<Object> params = constructParameters(event, objectMethod.method);
+                        log.debug("Calling JDA methods for {}", clazz.getName());
                         objectMethod.method.invoke(objectMethod.object, params.toArray());
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);
