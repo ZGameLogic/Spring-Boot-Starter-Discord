@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -37,25 +38,41 @@ public class DiscordBotAutoConfiguration {
      * @author Ben Shabowski
      * @since 1.0.0
      */
-    public DiscordBotAutoConfiguration(DiscordBotProperties properties, ApplicationContext context, ListableBeanFactory beans){
-        JDABuilder builder = JDABuilder.createDefault(properties.getToken());
-        if(properties.getGatewayIntents() != null) {
-            for (String intent : properties.getGatewayIntents()) {
-                Translator.stringToIntent(intent).ifPresentOrElse(builder::enableIntents,
-                        () -> log.warn("Unable to decode {} gateway intent", intent));
+    public DiscordBotAutoConfiguration(
+            DiscordBotProperties properties,
+            ApplicationContext context,
+            ListableBeanFactory beans,
+            @Autowired(required = false) JDABuilder beanBuilder
+    ){
+        log.debug("Bean JDABuilder present {}", beanBuilder != null);
+        JDABuilder builder = beanBuilder == null ? JDABuilder.createDefault(properties.getToken()) : beanBuilder;
+        if(beanBuilder == null) {
+            if (properties.getGatewayIntents() != null) {
+                for (String intent : properties.getGatewayIntents()) {
+                    Translator.stringToIntent(intent).ifPresentOrElse(i -> {
+                        log.debug("Enabled intent: {}", i.name());
+                        builder.enableIntents(i);
+                    }, () -> log.warn("Unable to decode {} gateway intent", intent));
+                }
             }
-        }
-        if(properties.getCacheFlags() != null) {
-            for (String cacheFlag : properties.getCacheFlags()) {
-                Translator.stringToCache(cacheFlag).ifPresentOrElse(builder::enableCache,
-                        () -> log.warn("Unable to decode {} cache flag", cacheFlag));
+            if (properties.getCacheFlags() != null) {
+                for (String cacheFlag : properties.getCacheFlags()) {
+                    Translator.stringToCache(cacheFlag).ifPresentOrElse(e -> {
+                        log.debug("Enabled cache: {}", e.name());
+                        builder.enableCache(e);
+                    }, () -> log.warn("Unable to decode {} cache flag", cacheFlag));
+                }
             }
+            if (properties.getMemberCachePolicy() != null) {
+                Translator.stringToMemberCachePolicy(properties.getMemberCachePolicy()).ifPresentOrElse(mcp -> {
+                    log.debug("Enabled member cache policy: {}", mcp);
+                    builder.setMemberCachePolicy(mcp);
+                }, () -> log.warn("Unable to decode {} member cache policy", properties.getMemberCachePolicy()));
+            }
+            builder.setEventPassthrough(properties.isEventPassthrough());
+        } else {
+            log.debug("Skipping configuration from properties files since spring found a bean for JDABuilder.");
         }
-        if(properties.getMemberCachePolicy() != null) {
-            Translator.stringToMemberCachePolicy(properties.getMemberCachePolicy()).ifPresentOrElse(builder::setMemberCachePolicy,
-                    () -> log.warn("Unable to decode {} member cache policy", properties.getMemberCachePolicy()));
-        }
-        builder.setEventPassthrough(properties.isEventPassthrough());
         DiscordListener listener = new DiscordListener();
         context.getBeansWithAnnotation(DiscordController.class).forEach((controllerClassName, controllerObject) -> {
             for(Method method: controllerObject.getClass().getDeclaredMethods()){
