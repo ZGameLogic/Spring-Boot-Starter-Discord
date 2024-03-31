@@ -3,9 +3,6 @@ package com.zgamelogic.autoconfigure;
 import com.zgamelogic.annotations.DiscordMapping;
 import com.zgamelogic.annotations.EventProperty;
 import com.zgamelogic.helpers.Translator;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -20,6 +17,7 @@ import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import net.dv8tion.jda.internal.utils.ClassWalker;
+import org.slf4j.Logger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -27,15 +25,15 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
 
-@Slf4j
 public class DiscordListener implements EventListener {
 
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordListener.class);
     private final Map<Class<?>, List<ObjectMethod>> methods;
     private final List<ObjectField> botVars;
     private final List<Invalidation> invalidations;
     private boolean ready;
 
-    public DiscordListener(){
+    public DiscordListener() {
         ready = false;
         methods = new HashMap<>();
         botVars = new LinkedList<>();
@@ -44,9 +42,10 @@ public class DiscordListener implements EventListener {
         invalidations.add((annotation, event) -> {
             try {
                 CommandAutoCompleteInteractionEvent e = (CommandAutoCompleteInteractionEvent) event;
-                if (!annotation.Id().isEmpty() && !annotation.Id().equals(e.getName())) return true;
-                if (!annotation.SubId().isEmpty() && !annotation.SubId().equals(e.getSubcommandName())) return true;
-                if (!annotation.FocusedOption().isEmpty() && !annotation.FocusedOption().equals(e.getFocusedOption().getName())) return true;
+                if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getName())) return true;
+                if(!annotation.SubId().isEmpty() && !annotation.SubId().equals(e.getSubcommandName())) return true;
+                if(!annotation.FocusedOption().isEmpty() && !annotation.FocusedOption().equals(e.getFocusedOption().getName()))
+                    return true;
             } catch (Exception ignored) {}
             return false;
         });
@@ -63,7 +62,7 @@ public class DiscordListener implements EventListener {
         invalidations.add((annotation, event) -> {
             try {
                 ModalInteractionEvent e = (ModalInteractionEvent) event;
-                if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getModalId())) return true;
+                if (!annotation.Id().isEmpty() && !annotation.Id().equals(e.getModalId())) return true;
             } catch (Exception ignored) {}
             return false;
         });
@@ -71,7 +70,7 @@ public class DiscordListener implements EventListener {
         invalidations.add((annotation, event) -> {
             try {
                 ButtonInteractionEvent e = (ButtonInteractionEvent) event;
-                if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getButton().getId())) return true;
+                if (!annotation.Id().isEmpty() && !annotation.Id().equals(e.getButton().getId())) return true;
             } catch (Exception ignored) {}
             return false;
         });
@@ -79,8 +78,9 @@ public class DiscordListener implements EventListener {
         invalidations.add((annotation, event) -> {
             try {
                 StringSelectInteractionEvent e = (StringSelectInteractionEvent) event;
-                if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getSelectMenu().getId())) return true;
-                if(!annotation.FocusedOption().isEmpty() && !annotation.FocusedOption().equals(e.getInteraction().getSelectedOptions().get(0).getValue())) return true;
+                if (!annotation.Id().isEmpty() && !annotation.Id().equals(e.getSelectMenu().getId())) return true;
+                if (!annotation.FocusedOption().isEmpty() && !annotation.FocusedOption().equals(e.getInteraction().getSelectedOptions().get(0).getValue()))
+                    return true;
             } catch (Exception ignored) {}
             return false;
         });
@@ -115,9 +115,9 @@ public class DiscordListener implements EventListener {
     }
 
     @Override
-    public void onEvent(GenericEvent event) {
-        for (Class<?> clazz : ClassWalker.range(event.getClass(), GenericEvent.class)) {
-            if(!ready && clazz == ReadyEvent.class){ // ready event for initialization to set all the bot vars
+    public void onEvent(GenericEvent event){
+        for(Class<?> clazz : ClassWalker.range(event.getClass(), GenericEvent.class)) {
+            if(!ready && clazz == ReadyEvent.class) { // ready event for initialization to set all the bot vars
                 ready = true;
                 botVars.forEach(objectField -> {
                     try {
@@ -129,12 +129,13 @@ public class DiscordListener implements EventListener {
                 });
                 botVars.clear();
             }
-            if(methods.containsKey(clazz)){
+            if(methods.containsKey(clazz)) {
                 methods.get(clazz).forEach(objectMethod -> {
                     objectMethod.method.setAccessible(true);
                     try {
                         DiscordMapping annotation = objectMethod.method.getAnnotation(DiscordMapping.class);
-                        for(Invalidation invalidation: invalidations) if(invalidation.isInvalid(annotation, event)) return;
+                        for(Invalidation invalidation : invalidations)
+                            if(invalidation.isInvalid(annotation, event)) return;
                         List<Object> params = constructParameters(event, objectMethod.method);
                         log.debug("Calling JDA methods for {}", clazz.getName());
                         objectMethod.method.invoke(objectMethod.object, params.toArray());
@@ -146,34 +147,34 @@ public class DiscordListener implements EventListener {
         }
     }
 
-    private List<Object> constructParameters(GenericEvent event, Method method){
+    private List<Object> constructParameters(GenericEvent event, Method method) {
         List<Object> parameters = new LinkedList<>();
-        for(Parameter methodParam: method.getParameters()){
-            if(Event.class.isAssignableFrom(methodParam.getType())){
+        for (Parameter methodParam : method.getParameters()) {
+            if (Event.class.isAssignableFrom(methodParam.getType())) {
                 parameters.add(event);
                 continue;
             }
-            if(methodParam.isAnnotationPresent(EventProperty.class)){
+            if (methodParam.isAnnotationPresent(EventProperty.class)) {
                 EventProperty annotation = methodParam.getAnnotation(EventProperty.class);
                 String name = annotation.name().isEmpty() ? methodParam.getName() : annotation.name();
-                if(event instanceof SlashCommandInteractionEvent slashEvent){
-                    if(methodParam.getType() == OptionMapping.class){
-                         parameters.add(slashEvent.getOption(name));
-                         continue;
+                if (event instanceof SlashCommandInteractionEvent slashEvent) {
+                    if (methodParam.getType() == OptionMapping.class) {
+                        parameters.add(slashEvent.getOption(name));
+                        continue;
                     }
                     Object o = Translator.eventOptionToObject(slashEvent.getOption(name));
                     parameters.add(o);
                     continue;
-                } else if(event instanceof CommandAutoCompleteInteractionEvent autoCompleteEvent) {
-                    if(methodParam.getType() == OptionMapping.class){
+                } else if (event instanceof CommandAutoCompleteInteractionEvent autoCompleteEvent) {
+                    if (methodParam.getType() == OptionMapping.class) {
                         parameters.add(autoCompleteEvent.getOption(name));
                         continue;
                     }
                     Object o = Translator.eventOptionToObject(autoCompleteEvent.getOption(name));
                     parameters.add(o);
                     continue;
-                } else if(event instanceof ModalInteractionEvent modalEvent) {
-                    if(methodParam.getType() == ModalMapping.class){
+                } else if (event instanceof ModalInteractionEvent modalEvent) {
+                    if (methodParam.getType() == ModalMapping.class) {
                         parameters.add(modalEvent.getValue(name));
                         continue;
                     }
@@ -186,18 +187,32 @@ public class DiscordListener implements EventListener {
         return parameters;
     }
 
-    @Getter
-    @AllArgsConstructor
     private static class ObjectMethod {
         private Object object;
         private Method method;
+
+        public ObjectMethod(Object object, Method method) {
+            this.object = object;
+            this.method = method;
+        }
     }
 
-    @Getter
-    @AllArgsConstructor
     private static class ObjectField {
-        private Object object;
-        private Field field;
+        private final Object object;
+        private final Field field;
+
+        public ObjectField(Object object, Field field) {
+            this.object = object;
+            this.field = field;
+        }
+
+        public Object getObject() {
+            return this.object;
+        }
+
+        public Field getField() {
+            return this.field;
+        }
     }
 
     private interface Invalidation {
