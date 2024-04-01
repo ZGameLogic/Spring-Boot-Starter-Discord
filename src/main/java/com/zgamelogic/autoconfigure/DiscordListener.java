@@ -121,8 +121,8 @@ public class DiscordListener implements EventListener {
                 ready = true;
                 botVars.forEach(objectField -> {
                     try {
-                        objectField.getField().setAccessible(true);
-                        objectField.getField().set(objectField.getObject(), event.getJDA());
+                        objectField.field().setAccessible(true);
+                        objectField.field().set(objectField.object(), event.getJDA());
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
@@ -187,33 +187,8 @@ public class DiscordListener implements EventListener {
         return parameters;
     }
 
-    private static class ObjectMethod {
-        private Object object;
-        private Method method;
-
-        public ObjectMethod(Object object, Method method) {
-            this.object = object;
-            this.method = method;
-        }
-    }
-
-    private static class ObjectField {
-        private final Object object;
-        private final Field field;
-
-        public ObjectField(Object object, Field field) {
-            this.object = object;
-            this.field = field;
-        }
-
-        public Object getObject() {
-            return this.object;
-        }
-
-        public Field getField() {
-            return this.field;
-        }
-    }
+    private record ObjectMethod(Object object, Method method) {}
+    private record ObjectField(Object object, Field field) {}
 
     private interface Invalidation {
         boolean isInvalid(DiscordMapping annotation, GenericEvent event);
