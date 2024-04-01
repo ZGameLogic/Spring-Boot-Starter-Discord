@@ -22,13 +22,6 @@
                     <encoding>UTF-8</encoding>
                     <debug>true</debug>
                     <debuglevel>lines,vars,source</debuglevel>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.18.30</version>
-                        </path>
-                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
@@ -90,8 +83,6 @@
             </plugin>
         </plugins>
     </build>
-
-
 
     <dependencies>
         <dependency>
