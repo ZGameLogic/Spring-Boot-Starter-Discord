@@ -63,3 +63,6 @@ public class DiscordListener {
     private JDA bot;
 }
 ```
+
+# Planned Features
+Support for `DefaultShardManagerBuilder`s as both from application properties and as a @Bean
