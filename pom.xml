@@ -6,7 +6,7 @@
 
     <groupId>com.zgamelogic</groupId>
     <artifactId>spring-boot-starter-discord</artifactId>
-    <version>1.2.4</version>
+    <version>1.2.5</version>
     <description>Integration library for spring and JDA: a discord bot API.</description>
     <url>https://github.com/ZGameLogic/Spring-Boot-Starter-Discord</url>
 
@@ -22,13 +22,6 @@
                     <encoding>UTF-8</encoding>
                     <debug>true</debug>
                     <debuglevel>lines,vars,source</debuglevel>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.18.30</version>
-                        </path>
-                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
@@ -91,13 +84,17 @@
         </plugins>
     </build>
 
-
-
     <dependencies>
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
             <version>5.0.0-beta.21</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>club.minnced</groupId>
+                    <artifactId>opus-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -123,12 +120,4 @@
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.2.2</version>
     </parent>
-
-    <repositories>
-        <repository>
-            <id>dv8tion</id>
-            <name>m2-dv8tion</name>
-            <url>https://m2.dv8tion.net/releases</url>
-        </repository>
-    </repositories>
 </project>
