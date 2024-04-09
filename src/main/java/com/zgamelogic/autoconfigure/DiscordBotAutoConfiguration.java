@@ -79,7 +79,6 @@ public class DiscordBotAutoConfiguration {
         context.getBeansWithAnnotation(DiscordController.class).forEach((controllerClassName, controllerObject) -> {
             for(Method method: controllerObject.getClass().getDeclaredMethods()){
                 if(!method.isAnnotationPresent(DiscordMapping.class)) continue;
-                // TODO check if the method has an object and that that object has a default no args constructor
                 listener.addObjectMethod(controllerObject, method);
             }
             for(Field field: controllerObject.getClass().getDeclaredFields()){

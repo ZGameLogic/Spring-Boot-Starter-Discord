@@ -161,18 +161,46 @@ public class DiscordListener implements EventListener {
                 continue;
             }
             if (methodParam.isAnnotationPresent(EventProperty.class)) {
-                if(isClassValidToObject(methodParam.getType())){ // Object to map params too
+                if(!isClassValidToObject(methodParam.getType())){ // Object to map params too
                     try {
-                        Constructor<?> con = methodParam.getType().getConstructor();
+                        Class<?> clazz = methodParam.getType();
+                        Constructor<?> con = clazz.getConstructor();
                         con.setAccessible(true);
                         Object obj = con.newInstance();
-                        // TODO event params to object fields
+                        for(Field field: clazz.getDeclaredFields()){
+                            field.setAccessible(true);
+                            EventProperty annotation = field.getAnnotation(EventProperty.class);
+                            String name = annotation == null ? field.getName() : annotation.name().isEmpty() ? field.getName() : annotation.name();
+                            if (event instanceof SlashCommandInteractionEvent slashEvent) {
+                                if (field.getType() == OptionMapping.class) {
+                                    field.set(obj, slashEvent.getOption(name));
+                                    continue;
+                                }
+                                Object o = Translator.eventOptionToObject(slashEvent.getOption(name));
+                                if(o != null) field.set(obj, o);
+                            } else if (event instanceof CommandAutoCompleteInteractionEvent autoCompleteEvent) {
+                                if (field.getType() == OptionMapping.class) {
+                                    field.set(obj, autoCompleteEvent.getOption(name));
+                                    continue;
+                                }
+                                Object o = Translator.eventOptionToObject(autoCompleteEvent.getOption(name));
+                                if(o != null) field.set(obj, o);
+                            } else if (event instanceof ModalInteractionEvent modalEvent) {
+                                if (field.getType() == ModalMapping.class) {
+                                    field.set(obj, modalEvent.getValue(name));
+                                    continue;
+                                }
+                                ModalMapping value = modalEvent.getValue(name);
+                                if(value != null) field.set(obj, modalEvent.getValue(name).getAsString());
+                            }
+                        }
                         parameters.add(obj);
                     } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                         log.error(e.getMessage(), e);
                     } catch (NoSuchMethodException nsme){
                         log.error("No default constructor for class {}", methodParam.getType().getName(), nsme);
                     }
+                    continue;
                 } else { // params to get mapped
                     EventProperty annotation = methodParam.getAnnotation(EventProperty.class);
                     String name = annotation.name().isEmpty() ? methodParam.getName() : annotation.name();
