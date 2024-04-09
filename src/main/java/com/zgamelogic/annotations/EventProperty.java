@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  * @since 1.2.0
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)
+@Target({ElementType.PARAMETER, ElementType.FIELD})
 public @interface EventProperty {
     /**
      * Use this to look for a specific name of the command option value.
