@@ -1,10 +1,16 @@
 package com.zgamelogic.helpers;
 
+import net.dv8tion.jda.api.entities.IMentionable;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
+import java.util.List;
 import java.util.Optional;
 
 public abstract class Translator {
@@ -62,6 +68,21 @@ public abstract class Translator {
             case "DEFAULT" -> Optional.of(MemberCachePolicy.DEFAULT);
             default -> Optional.empty();
         };
+    }
+
+    public static boolean isClassValidToObject(Class<?> clazz){
+        return List.of(
+                String.class,
+                Integer.class,
+                int.class,
+                Boolean.class,
+                boolean.class,
+                User.class,
+                Channel.class,
+                Role.class,
+                IMentionable.class,
+                Message.Attachment.class
+        ).contains(clazz);
     }
 
     public static Object eventOptionToObject(OptionMapping mapping){
