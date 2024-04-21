@@ -87,34 +87,16 @@ public abstract class Translator {
 
     public static Object eventOptionToObject(OptionMapping mapping){
         if(mapping == null) return null;
-        switch(mapping.getType()){
-            case STRING -> {
-                return mapping.getAsString();
-            }
-            case INTEGER -> {
-                return mapping.getAsInt();
-            }
-            case BOOLEAN -> {
-                return mapping.getAsBoolean();
-            }
-            case USER -> {
-                return mapping.getAsUser();
-            }
-            case CHANNEL -> {
-                return mapping.getAsChannel();
-            }
-            case ROLE -> {
-                return mapping.getAsRole();
-            }
-            case MENTIONABLE -> {
-                return mapping.getAsMentionable();
-            }
-            case ATTACHMENT -> {
-                return mapping.getAsAttachment();
-            }
-            default -> {
-                return null;
-            }
-        }
+        return switch(mapping.getType()){
+            case STRING -> mapping.getAsString();
+            case INTEGER -> mapping.getAsInt();
+            case BOOLEAN -> mapping.getAsBoolean();
+            case USER -> mapping.getAsUser();
+            case CHANNEL -> mapping.getAsChannel();
+            case ROLE -> mapping.getAsRole();
+            case MENTIONABLE -> mapping.getAsMentionable();
+            case ATTACHMENT -> mapping.getAsAttachment();
+            default -> null;
+        };
     }
 }

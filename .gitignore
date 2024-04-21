@@ -35,7 +35,4 @@ build/
 .vscode/
 
 ### Mac OS ###
-.DS_Store
-
-src/test/resources/application.properties
-src/test
+.DS_Storex
