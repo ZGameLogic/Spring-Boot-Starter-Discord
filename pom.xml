@@ -6,7 +6,7 @@
 
     <groupId>com.zgamelogic</groupId>
     <artifactId>spring-boot-starter-discord</artifactId>
-    <version>1.4.2</version>
+    <version>1.4.2-uia</version>
     <description>Integration library for spring and JDA: a discord bot API.</description>
     <url>https://github.com/ZGameLogic/Spring-Boot-Starter-Discord</url>
 
@@ -84,17 +84,18 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
-            <groupId>net.dv8tion</groupId>
+            <groupId>com.github.freya022</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>club.minnced</groupId>
-                    <artifactId>opus-java</artifactId>
-                </exclusion>
-            </exclusions>
+            <version>f94446d</version>
         </dependency>
 
         <dependency>
