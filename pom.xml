@@ -6,7 +6,7 @@
 
     <groupId>com.zgamelogic</groupId>
     <artifactId>spring-boot-starter-discord</artifactId>
-    <version>1.4.2-uia</version>
+    <version>1.4.3</version>
     <description>Integration library for spring and JDA: a discord bot API.</description>
     <url>https://github.com/ZGameLogic/Spring-Boot-Starter-Discord</url>
 
@@ -93,9 +93,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.freya022</groupId>
+            <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>f94446d</version>
+            <version>5.2.1</version>
         </dependency>
 
         <dependency>
@@ -119,6 +119,6 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.4</version>
+        <version>3.3.5</version>
     </parent>
 </project>
