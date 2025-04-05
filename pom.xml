@@ -6,7 +6,7 @@
 
     <groupId>com.zgamelogic</groupId>
     <artifactId>spring-boot-starter-discord</artifactId>
-    <version>1.4.6</version>
+    <version>1.4.7</version>
     <description>Integration library for spring and JDA: a discord bot API.</description>
     <url>https://github.com/ZGameLogic/Spring-Boot-Starter-Discord</url>
 
@@ -95,7 +95,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.3.1</version>
+            <version>5.3.2</version>
         </dependency>
 
         <dependency>
