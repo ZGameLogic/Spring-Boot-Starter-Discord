@@ -43,4 +43,10 @@ public @interface DiscordMapping {
      * @return focused option of the command you would like to match it with
      */
     String FocusedOption() default "";
+
+    /**
+     * Mark as a validation method. If true, run this method before any non validation method.
+     * @return false if command is not valid, true if it should still execute
+     */
+    boolean validation() default false;
 }

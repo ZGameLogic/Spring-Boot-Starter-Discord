@@ -80,6 +80,7 @@ public class DiscordBotAutoConfiguration {
         context.getBeansWithAnnotation(DiscordController.class).forEach((controllerClassName, controllerObject) -> {
             for(Method method: controllerObject.getClass().getDeclaredMethods()){
                 if(!method.isAnnotationPresent(DiscordMapping.class) && !method.isAnnotationPresent(DiscordMappings.class)) continue;
+
                 listener.addObjectMethod(controllerObject, method);
             }
             for(Field field: controllerObject.getClass().getDeclaredFields()){

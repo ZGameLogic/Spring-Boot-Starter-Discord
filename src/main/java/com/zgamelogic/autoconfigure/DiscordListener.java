@@ -29,6 +29,7 @@ public class DiscordListener implements EventListener {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordListener.class);
     private final Map<Class<?>, List<ObjectMethod>> methods;
+    private final Map<Class<?>, List<ObjectMethod>> validationMethods;
     private final List<ObjectField> botVars;
     private final List<Invalidation> invalidations;
     private boolean ready;
@@ -37,6 +38,7 @@ public class DiscordListener implements EventListener {
     public DiscordListener() {
         ready = false;
         methods = new HashMap<>();
+        validationMethods = new HashMap<>();
         botVars = new LinkedList<>();
         invalidations = new LinkedList<>();
         // Autocomplete interactions
@@ -96,6 +98,22 @@ public class DiscordListener implements EventListener {
     }
 
     public void addObjectMethod(Object object, Method method){
+        List<Parameter> JDAParams = Arrays.stream(method.getParameters()).filter(parameter -> Event.class.isAssignableFrom(parameter.getType())).toList();
+        if(JDAParams.size() != 1){
+            log.error("Error when mapping method: {}", method.getName());
+            log.error("Discord mappings must have one JDA event parameter.");
+            throw new RuntimeException("Discord mappings must have one JDA event parameter");
+        }
+        Class<?> clazz = JDAParams.get(0).getType();
+        log.debug("Adding {} listener: {}", clazz.getName(), method.getName());
+        if(methods.containsKey(clazz)){
+            methods.get(clazz).add(new ObjectMethod(object, method));
+        } else {
+            methods.put(clazz, new LinkedList<>(List.of(new ObjectMethod(object, method))));
+        }
+    }
+
+    public void addValidationObjectMethod(Object object, Method method){
         List<Parameter> JDAParams = Arrays.stream(method.getParameters()).filter(parameter -> Event.class.isAssignableFrom(parameter.getType())).toList();
         if(JDAParams.size() != 1){
             log.error("Error when mapping method: {}", method.getName());
