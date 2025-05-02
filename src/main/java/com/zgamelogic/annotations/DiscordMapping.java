@@ -10,7 +10,6 @@ import java.lang.annotation.*;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-@Repeatable(DiscordMappings.class)
 public @interface DiscordMapping {
 
     /**
@@ -35,6 +34,15 @@ public @interface DiscordMapping {
      * @return sub-id of the command you would like to match it with
      */
     String SubId() default "";
+
+    /**
+     * Use this to have this method only called when the group name of a command equals this string.
+     * This works with the following
+     * @see net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+     * @see net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
+     * @return group name of the command you would like to match it with
+     */
+    String GroupName() default "";
 
     /**
      * Use this to have this method only called when the focused option of an interaction event.

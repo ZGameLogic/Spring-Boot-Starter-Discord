@@ -3,7 +3,6 @@ package com.zgamelogic.autoconfigure;
 import com.zgamelogic.annotations.Bot;
 import com.zgamelogic.annotations.DiscordController;
 import com.zgamelogic.annotations.DiscordMapping;
-import com.zgamelogic.annotations.DiscordMappings;
 import com.zgamelogic.helpers.Translator;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -79,7 +78,7 @@ public class DiscordBotAutoConfiguration {
         DiscordListener listener = new DiscordListener();
         context.getBeansWithAnnotation(DiscordController.class).forEach((controllerClassName, controllerObject) -> {
             for(Method method: controllerObject.getClass().getDeclaredMethods()){
-                if(!method.isAnnotationPresent(DiscordMapping.class) && !method.isAnnotationPresent(DiscordMappings.class)) continue;
+                if(!method.isAnnotationPresent(DiscordMapping.class)) continue;
                 listener.addObjectMethod(controllerObject, method);
             }
             for(Field field: controllerObject.getClass().getDeclaredFields()){

@@ -44,6 +44,7 @@ public class DiscordListener implements EventListener {
             try {
                 CommandAutoCompleteInteractionEvent e = (CommandAutoCompleteInteractionEvent) event;
                 if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getName())) return true;
+                if(!annotation.GroupName().isEmpty() && !annotation.GroupName().equals(e.getSubcommandGroup())) return true;
                 if(!annotation.SubId().isEmpty() && !annotation.SubId().equals(e.getSubcommandName())) return true;
                 if(!annotation.FocusedOption().isEmpty() && !annotation.FocusedOption().equals(e.getFocusedOption().getName()))
                     return true;
@@ -55,6 +56,7 @@ public class DiscordListener implements EventListener {
             try {
                 GenericCommandInteractionEvent e = (GenericCommandInteractionEvent) event;
                 if(!annotation.Id().isEmpty() && !annotation.Id().equals(e.getName())) return true;
+                if(!annotation.GroupName().isEmpty() && !annotation.GroupName().equals(e.getSubcommandGroup())) return true;
                 if(!annotation.SubId().isEmpty() && !annotation.SubId().equals(e.getSubcommandName())) return true;
             } catch (Exception ignored) {}
             return false;
