@@ -1,4 +1,4 @@
-package com.zgamelogic.helpers;
+package com.zgamelogic.discord.helpers;
 
 import net.dv8tion.jda.api.entities.IMentionable;
 import net.dv8tion.jda.api.entities.Message;

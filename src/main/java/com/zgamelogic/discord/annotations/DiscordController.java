@@ -1,4 +1,4 @@
-package com.zgamelogic.annotations;
+package com.zgamelogic.discord.annotations;
 
 import org.springframework.stereotype.Component;
 
