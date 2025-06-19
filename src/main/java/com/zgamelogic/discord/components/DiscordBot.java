@@ -8,8 +8,7 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -21,12 +20,10 @@ import java.util.List;
  * @author Ben Shabowski
  * @since 1.0.0
  */
-@Configuration
+@Component
 @EnableConfigurationProperties(DiscordBotProperties.class)
 public class DiscordBot {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordBot.class);
-
-    private final JDA bot;
     /**
      * Creates a configuration with specific properties and application contexts
      *
@@ -73,7 +70,7 @@ public class DiscordBot {
         builder.addEventListeners(listener);
 
         try {
-            bot = builder.build().awaitReady();
+            JDA bot = builder.build().awaitReady();
             List<CommandData> commandData = new LinkedList<>(beans.getBeansOfType(CommandData.class).values());
             beans.getBeansOfType(List.class).values().forEach(list -> {
                 if(!list.isEmpty() && list.get(0) instanceof CommandData){
@@ -86,10 +83,5 @@ public class DiscordBot {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Bean
-    public JDA bot(){
-        return bot;
     }
 }

@@ -1,7 +1,7 @@
 package com.zgamelogic.discord.components;
 
+import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
@@ -22,7 +22,7 @@ public class DiscordHandlerAdapter {
         // TODO map parameters
         return Arrays.stream(method.getParameters())
             .map(param -> {
-                if (param.getType().equals(SlashCommandInteractionEvent.class)) {
+                if (Event.class.isAssignableFrom(param.getType())) {
                     return event;
                 }
                 // Add more resolver logic here

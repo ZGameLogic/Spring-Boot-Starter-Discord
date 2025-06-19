@@ -17,13 +17,15 @@ public class DiscordDispatcher {
     }
 
     public void dispatch(GenericEvent event) {
-        try {
-            var handler = handlerMapping.findHandlerFor(event);
-            if (handler != null) {
-                handlerAdapter.invoke(handler, event);
-            }
-        } catch (Exception ex) {
-            log.error("Error dispatching event", ex);
+        var handler = handlerMapping.findHandlerFor(event);
+        if (handler != null) {
+            handler.forEach(methodHandler -> {
+                try {
+                    handlerAdapter.invoke(methodHandler, event);
+                } catch (Exception e) {
+                    log.error("Error dispatching event", e);
+                }
+            });
         }
     }
 }

@@ -4,11 +4,9 @@ import com.zgamelogic.discord.annotations.DiscordController;
 import com.zgamelogic.discord.annotations.DiscordMapping;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
@@ -30,7 +28,7 @@ public class DiscordHandlerMapping implements InitializingBean {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordHandlerMapping.class);
 
     private final ApplicationContext context;
-    private final Map<String, MethodHandle> mapping = new HashMap<>();
+    private final Map<String, List<MethodHandle>> mapping = new HashMap<>();
 
     public DiscordHandlerMapping(ApplicationContext context) {
         this.context = context;
@@ -43,13 +41,17 @@ public class DiscordHandlerMapping implements InitializingBean {
                 DiscordMapping mappingAnn = AnnotationUtils.findAnnotation(method, DiscordMapping.class);
                 if (mappingAnn != null) {
                     String key = generateKey(mappingAnn, method);
-                    mapping.put(key, new MethodHandle(bean, method, mappingAnn));
+                    MethodHandle methodHandle = new MethodHandle(bean, method, mappingAnn);
+                    mapping.merge(key, List.of(methodHandle), (existingList, newList) -> {
+                        existingList.addAll(newList);
+                        return existingList;
+                    });
                 }
             }
         }
     }
 
-    public MethodHandle findHandlerFor(GenericEvent event) {
+    public List<MethodHandle> findHandlerFor(GenericEvent event) {
         String key = generateKeyFromEvent(event);
         return mapping.get(key);
     }
@@ -71,8 +73,8 @@ public class DiscordHandlerMapping implements InitializingBean {
     }
 
     private String generateKeyFromEvent(GenericEvent event){
+        // TODO generate key from event
         String name = event.getClass().getSimpleName();
-
 
         GenericCommandInteractionEvent j;
         CommandAutoCompleteInteractionEvent e;
