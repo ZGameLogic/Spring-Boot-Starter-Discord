@@ -1,9 +1,6 @@
-package com.zgamelogic.autoconfigure;
+package com.zgamelogic.discord.components;
 
-import com.zgamelogic.annotations.Bot;
-import com.zgamelogic.annotations.DiscordController;
-import com.zgamelogic.annotations.DiscordMapping;
-import com.zgamelogic.helpers.Translator;
+import com.zgamelogic.discord.helpers.Translator;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -11,11 +8,8 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,25 +20,23 @@ import java.util.List;
  * @author Ben Shabowski
  * @since 1.0.0
  */
-@Configuration
+@Component
 @EnableConfigurationProperties(DiscordBotProperties.class)
-public class DiscordBotAutoConfiguration {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordBotAutoConfiguration.class);
-
+public class DiscordBot {
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordBot.class);
     /**
      * Creates a configuration with specific properties and application contexts
      *
      * @param properties Properties to create the bot builder with
-     * @param context    Application context that holds all the discord controllers
      * @param beans      Listable Bean factory that holds the beans of command data to be auto-injected into the bot
      * @author Ben Shabowski
      * @since 1.0.0
      */
-    public DiscordBotAutoConfiguration(
-            DiscordBotProperties properties,
-            ApplicationContext context,
-            ListableBeanFactory beans,
-            @Autowired(required = false) JDABuilder beanBuilder
+    public DiscordBot(
+        DiscordBotProperties properties,
+        ListableBeanFactory beans,
+        DiscordListener listener,
+        @Autowired(required = false) JDABuilder beanBuilder
     ){
         log.debug("Bean JDABuilder present {}", beanBuilder != null);
         JDABuilder builder = beanBuilder == null ? JDABuilder.createDefault(properties.getToken()) : beanBuilder;
@@ -75,23 +67,6 @@ public class DiscordBotAutoConfiguration {
         } else {
             log.debug("Skipping configuration from properties files since spring found a bean for JDABuilder.");
         }
-        DiscordListener listener = new DiscordListener();
-        context.getBeansWithAnnotation(DiscordController.class).forEach((controllerClassName, controllerObject) -> {
-            for(Method method: controllerObject.getClass().getDeclaredMethods()){
-                if(!method.isAnnotationPresent(DiscordMapping.class)) continue;
-                listener.addObjectMethod(controllerObject, method);
-            }
-            for(Field field: controllerObject.getClass().getDeclaredFields()){
-                if(field.isAnnotationPresent(Bot.class)){
-                    if(field.getType() != JDA.class) {
-                        log.error("@Bot fields must be of type JDA");
-                        throw new RuntimeException("@Bot fields must be of type JDA");
-                    }
-                    listener.addReadyObjectField(controllerObject, field);
-                }
-            }
-        });
-
         builder.addEventListeners(listener);
 
         try {

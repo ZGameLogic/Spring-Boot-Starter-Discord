@@ -1,4 +1,4 @@
-package com.zgamelogic.autoconfigure;
+package com.zgamelogic.discord.components;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

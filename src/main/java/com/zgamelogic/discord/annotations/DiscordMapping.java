@@ -1,4 +1,4 @@
-package com.zgamelogic.annotations;
+package com.zgamelogic.discord.annotations;
 
 import java.lang.annotation.*;
 
@@ -10,6 +10,7 @@ import java.lang.annotation.*;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
+@Repeatable(DiscordMappings.class)
 public @interface DiscordMapping {
 
     /**

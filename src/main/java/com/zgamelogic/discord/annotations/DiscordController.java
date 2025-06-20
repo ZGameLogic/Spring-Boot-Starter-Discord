@@ -1,4 +1,4 @@
-package com.zgamelogic.annotations;
+package com.zgamelogic.discord.annotations;
 
 import org.springframework.stereotype.Component;
 
@@ -9,9 +9,8 @@ import java.lang.annotation.*;
  * @author Ben Shabowski
  * @since 1.0.0
  */
-@Target({ElementType.TYPE})
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Component
-public @interface DiscordController {
-}
+public @interface DiscordController {}
