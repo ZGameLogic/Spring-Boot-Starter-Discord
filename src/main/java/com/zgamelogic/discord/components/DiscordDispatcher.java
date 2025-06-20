@@ -75,6 +75,7 @@ public class DiscordDispatcher {
             for (Method method : bean.getClass().getDeclaredMethods()) {
                 if(!method.isAnnotationPresent(DiscordExceptionHandler.class)) continue;
                 DiscordExceptionHandler annotation = AnnotationUtils.findAnnotation(method, DiscordExceptionHandler.class);
+                log.debug("Adding exception mapping with method: {}", method.getName());
                 ExceptionMethod methodHandle = new ExceptionMethod(bean, method, annotation);
                 exceptions.merge(bean.getClass(), new ArrayList<>(List.of(methodHandle)), (existingList, newList) -> {
                     existingList.addAll(newList);
@@ -93,24 +94,27 @@ public class DiscordDispatcher {
                 Object[] params = resolveParamsForControllerMethod(method, event);
                 method.setAccessible(true);
                 method.invoke(controllerMethod.controller(), params);
-            } catch (Exception e){
+            } catch (InvocationTargetException e){
                 try {
                     throwControllerException(controllerMethod, event, e);
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);
                 }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
             }
         });
     }
 
-    private void throwControllerException(ControllerMethod controllerMethod, GenericEvent event, Throwable e) throws InvocationTargetException, IllegalAccessException {
+    private void throwControllerException(ControllerMethod controllerMethod, GenericEvent event, InvocationTargetException e) throws InvocationTargetException, IllegalAccessException {
         for (ExceptionMethod exceptionMethod : exceptions.getOrDefault(controllerMethod.controller.getClass(), new ArrayList<>())) {
             List<Class<?>> classes = List.of(exceptionMethod.annotation.value());
-            Class<?> current = e.getClass();
+            Class<?> current = e.getTargetException().getClass();
             while(current != null){
                 if(classes.contains(current)){
-                    Object[] params = resolveParamsForExceptionMethod(controllerMethod.method, event, e);
-                    controllerMethod.method.invoke(controllerMethod.controller, params);
+                    Object[] params = resolveParamsForExceptionMethod(exceptionMethod.method, event, e.getTargetException());
+                    exceptionMethod.method.setAccessible(true);
+                    exceptionMethod.method.invoke(controllerMethod.controller, params);
                     return;
                 }
                 current = current.getSuperclass();
@@ -222,6 +226,7 @@ public class DiscordDispatcher {
 
     private Object[] resolveParamsForArray(GenericEvent event, Throwable throwable, Parameter...parameters){
         List<Object> params = new ArrayList<>();
+        if (parameters == null) return params.toArray();
         for(Parameter parameter: parameters){
             if (Event.class.isAssignableFrom(parameter.getType())) { // if it's the JDA event
                 params.add(event);
