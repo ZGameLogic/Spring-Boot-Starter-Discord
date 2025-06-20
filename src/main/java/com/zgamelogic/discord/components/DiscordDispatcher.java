@@ -46,9 +46,9 @@ public class DiscordDispatcher {
     @PostConstruct
     private void mapMethods(){
         for (Object bean : applicationContext.getBeansWithAnnotation(DiscordController.class).values()) {
+            log.debug("Adding mappings for controller: {}", bean.getClass().getSimpleName());
             for (Method method : bean.getClass().getDeclaredMethods()) {
-                if(!method.isAnnotationPresent(DiscordMapping.class)) continue;
-                if(!method.isAnnotationPresent(DiscordMappings.class)) continue;
+                if(!method.isAnnotationPresent(DiscordMapping.class) && !method.isAnnotationPresent(DiscordMappings.class)) continue;
                 // construct a list of annotations on a method
                 List<DiscordMapping> annotations = new ArrayList<>();
                 DiscordMapping foundAnnotation = AnnotationUtils.findAnnotation(method, DiscordMapping.class);
@@ -58,6 +58,8 @@ public class DiscordDispatcher {
                 for(DiscordMapping mapping : annotations){
                     String key = generateKeyFromMethod(mapping, method);
                     ControllerMethod methodHandle = new ControllerMethod(bean, method);
+                    log.debug("Adding mappings for method: {}", method.getName());
+                    log.debug("\tMapping ID: {}", key);
                     mappings.merge(key, new ArrayList<>(List.of(methodHandle)), (existingList, newList) -> {
                         existingList.addAll(newList);
                         return existingList;
@@ -84,6 +86,7 @@ public class DiscordDispatcher {
 
     public void dispatch(GenericEvent event) {
         String eventKey = generateKeyFromEvent(event);
+        log.debug("Mapping ID: {}", eventKey);
         mappings.getOrDefault(eventKey, new ArrayList<>()).forEach(controllerMethod -> {
             try {
                 Method method = controllerMethod.method();
@@ -148,8 +151,8 @@ public class DiscordDispatcher {
                 "%s:%s:%s:%s:%s",
                 genericEvent.getClass().getSimpleName(),
                 event.getName(),
-                event.getSubcommandName(),
-                event.getSubcommandGroup(),
+                event.getSubcommandName() != null ? event.getSubcommandName() : "",
+                event.getSubcommandGroup() != null ? event.getSubcommandGroup() : "",
                 event.getFocusedOption().getName()
             );
         } else if (genericEvent instanceof GenericCommandInteractionEvent event) {
@@ -157,8 +160,8 @@ public class DiscordDispatcher {
                 "%s:%s:%s:%s:%s",
                 genericEvent.getClass().getSimpleName(),
                 event.getName(),
-                event.getSubcommandName(),
-                event.getSubcommandGroup(),
+                event.getSubcommandName() != null ? event.getSubcommandName() : "",
+                event.getSubcommandGroup() != null ? event.getSubcommandGroup() : "",
                 ""
             );
         } else if (genericEvent instanceof ModalInteractionEvent event) {
@@ -229,7 +232,7 @@ public class DiscordDispatcher {
                 continue;
             }
             EventProperty eventProperty = parameter.getAnnotation(EventProperty.class);
-            String name = eventProperty.name() != null ? eventProperty.name() : parameter.getName();
+            String name = eventProperty != null && !eventProperty.name().isEmpty() ? eventProperty.name() : parameter.getName();
             if(isClassValidToObject(parameter.getType())){ // event property
                 params.add(extractOptionFromEvent(event, name));
             } else { // event record or event class
