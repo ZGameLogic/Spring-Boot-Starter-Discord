@@ -20,6 +20,7 @@ public abstract class Translator {
             case "GUILD_MEMBERS" -> Optional.of(GatewayIntent.GUILD_MEMBERS);
             case "GUILD_MODERATION" -> Optional.of(GatewayIntent.GUILD_MODERATION);
             case "GUILD_EMOJIS_AND_STICKERS" -> Optional.of(GatewayIntent.GUILD_EMOJIS_AND_STICKERS);
+            case "GUILD_EXPRESSIONS" -> Optional.of(GatewayIntent.GUILD_EXPRESSIONS);
             case "GUILD_WEBHOOKS" -> Optional.of(GatewayIntent.GUILD_WEBHOOKS);
             case "GUILD_INVITES" -> Optional.of(GatewayIntent.GUILD_INVITES);
             case "GUILD_VOICE_STATES" -> Optional.of(GatewayIntent.GUILD_VOICE_STATES);
@@ -72,16 +73,16 @@ public abstract class Translator {
 
     public static boolean isClassValidToObject(Class<?> clazz){
         return List.of(
-                String.class,
-                Integer.class,
-                int.class,
-                Boolean.class,
-                boolean.class,
-                User.class,
-                Channel.class,
-                Role.class,
-                IMentionable.class,
-                Message.Attachment.class
+            String.class,
+            Integer.class,
+            int.class,
+            Boolean.class,
+            boolean.class,
+            User.class,
+            Channel.class,
+            Role.class,
+            IMentionable.class,
+            Message.Attachment.class
         ).contains(clazz);
     }
 

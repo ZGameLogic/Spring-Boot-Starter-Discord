@@ -1,9 +1,6 @@
 package com.zgamelogic.discord.components;
 
-import com.zgamelogic.discord.annotations.DiscordController;
-import com.zgamelogic.discord.annotations.DiscordExceptionHandler;
-import com.zgamelogic.discord.annotations.DiscordMapping;
-import com.zgamelogic.discord.annotations.DiscordMappings;
+import com.zgamelogic.discord.annotations.*;
 import jakarta.annotation.PostConstruct;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -22,6 +19,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
+
+import static com.zgamelogic.discord.helpers.Translator.isClassValidToObject;
 
 /**
  * DiscordDispatcher is responsible for dispatching events to the appropriate handlers.
@@ -209,8 +208,41 @@ public class DiscordDispatcher {
     }
 
     private Object[] resolveParamsForControllerMethod(Method method, GenericEvent event){
-        // TODO implement
-        return new Object[]{};
+        List<Object> params = new ArrayList<>();
+        for(Parameter parameter: method.getParameters()){
+            if (Event.class.isAssignableFrom(parameter.getType())) { // if it's the JDA event
+                params.add(event);
+                continue;
+            }
+            if(!parameter.isAnnotationPresent(EventProperty.class)) continue; // skip if no annotation
+            if(isClassValidToObject(parameter.getType())){ // event property
+
+            } else if(parameter.getType().isRecord()){ // event record
+
+            } else { // event object
+
+            }
+        }
+        return params.toArray();
+    }
+
+    private Object[] resolveParamsForArray(GenericEvent event, Parameter...parameters){
+        List<Object> params = new ArrayList<>();
+        for(Parameter parameter: parameters){
+            if (Event.class.isAssignableFrom(parameter.getType())) { // if it's the JDA event
+                params.add(event);
+                continue;
+            }
+            if(!parameter.isAnnotationPresent(EventProperty.class)) continue; // skip if no annotation
+            if(isClassValidToObject(parameter.getType())){ // event property
+
+            } else if(parameter.getType().isRecord()){ // event record
+
+            } else { // event object
+
+            }
+        }
+        return params.toArray();
     }
 
     private Object[] resolveParamsForExceptionMethod(Method method, GenericEvent event, Throwable throwable){
