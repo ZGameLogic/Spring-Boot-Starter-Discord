@@ -1,31 +1,180 @@
 package com.zgamelogic.discord.components;
 
+import com.zgamelogic.discord.annotations.DiscordController;
+import com.zgamelogic.discord.annotations.DiscordMapping;
+import com.zgamelogic.discord.annotations.DiscordMappings;
+import jakarta.annotation.PostConstruct;
+import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.*;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.*;
+
+/**
+ * DiscordDispatcher is responsible for dispatching events to the appropriate handlers.
+ * It uses a handler mapping to find the correct handler for each event and then invokes
+ * the handler using the handler adapter.
+ */
 @Component
 public class DiscordDispatcher {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordDispatcher.class);
+    private static final Logger log = LoggerFactory.getLogger(DiscordDispatcher.class);
 
-    private final DiscordHandlerMapping handlerMapping;
-    private final DiscordHandlerAdapter handlerAdapter;
+    private final ApplicationContext applicationContext;
+    private final Map<String, List<ControllerMethod>> mappings;
 
-    public DiscordDispatcher(DiscordHandlerMapping handlerMapping, DiscordHandlerAdapter handlerAdapter) {
-        this.handlerMapping = handlerMapping;
-        this.handlerAdapter = handlerAdapter;
+    public DiscordDispatcher(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+        mappings = new HashMap<>();
+    }
+
+    @PostConstruct
+    private void mapMethods(){
+        for (Object bean : applicationContext.getBeansWithAnnotation(DiscordController.class).values()) {
+            for (Method method : bean.getClass().getDeclaredMethods()) {
+                if(!method.isAnnotationPresent(DiscordMapping.class)) continue;
+                if(!method.isAnnotationPresent(DiscordMappings.class)) continue;
+                // construct a list of annotations on a method
+                List<DiscordMapping> annotations = new ArrayList<>();
+                DiscordMapping foundAnnotation = AnnotationUtils.findAnnotation(method, DiscordMapping.class);
+                DiscordMappings foundAnnotations = AnnotationUtils.findAnnotation(method, DiscordMappings.class);
+                if(foundAnnotation != null) annotations.add(foundAnnotation);
+                if(foundAnnotations != null) annotations.addAll(Arrays.asList(foundAnnotations.value()));
+                for(DiscordMapping mapping : annotations){
+                    String key = generateKeyFromMethod(mapping, method);
+                    ControllerMethod methodHandle = new ControllerMethod(bean, method);
+                    mappings.merge(key, new ArrayList<>(List.of(methodHandle)), (existingList, newList) -> {
+                        existingList.addAll(newList);
+                        return existingList;
+                    });
+                }
+            }
+        }
     }
 
     public void dispatch(GenericEvent event) {
-        var handler = handlerMapping.findHandlerFor(event);
-        if (handler != null) {
-            handler.forEach(methodHandler -> {
-                try {
-                    handlerAdapter.invoke(methodHandler, event);
-                } catch (Exception e) {
-                    log.error("Error dispatching event", e);
-                }
-            });
+        String eventKey = generateKeyFromEvent(event);
+        System.out.println(generateKeyFromEvent(event));
+        mappings.getOrDefault(eventKey, new ArrayList<>()).forEach(controllerMethod -> {
+            try {
+                Method method = controllerMethod.method();
+                Object[] params = resolveParamsForControllerMethod(method, event);
+                method.setAccessible(true);
+                method.invoke(controllerMethod.controller(), params);
+            } catch (Exception e){
+                // TODO oh boy exception handlers need to happen
+                log.error("Error while dispatching event {}", eventKey);
+            }
+        });
+    }
+
+    /**
+     * Generates a unique key for the method based on the DiscordMapping annotation.
+     * @param mapping the DiscordMapping annotation
+     * @param method the method to generate the key for
+     * @return a unique key for the method
+     */
+    private String generateKeyFromMethod(DiscordMapping mapping, Method method){
+        List<Parameter> JDAParams = Arrays.stream(method.getParameters())
+                .filter(parameter -> Event.class.isAssignableFrom(parameter.getType()))
+                .toList();
+        if(JDAParams.size() != 1){
+            log.error("Error when mapping method: {}", method.getName());
+            log.error("Discord mappings must have one JDA event parameter.");
+            throw new RuntimeException("Discord mappings must have one JDA event parameter");
+        }
+        Class<?> clazz = JDAParams.get(0).getType();
+        return String.format(
+            "%s:%s:%s:%s:%s",
+            clazz.getSimpleName(),
+            mapping.Id(),
+            mapping.SubId(),
+            mapping.GroupName(),
+            mapping.FocusedOption()
+        );
+    }
+
+    private String generateKeyFromEvent(GenericEvent genericEvent) {
+        if (genericEvent instanceof CommandAutoCompleteInteractionEvent event) {
+            return String.format(
+                "%s:%s:%s:%s:%s",
+                genericEvent.getClass().getSimpleName(),
+                event.getName(),
+                event.getSubcommandName(),
+                event.getSubcommandGroup(),
+                event.getFocusedOption().getName()
+            );
+        } else if (genericEvent instanceof GenericCommandInteractionEvent event) {
+            return String.format(
+                "%s:%s:%s:%s:%s",
+                genericEvent.getClass().getSimpleName(),
+                event.getName(),
+                event.getSubcommandName(),
+                event.getSubcommandGroup(),
+                ""
+            );
+        } else if (genericEvent instanceof ModalInteractionEvent event) {
+            return String.format(
+                "%s:%s:%s:%s:%s",
+                genericEvent.getClass().getSimpleName(),
+                event.getId(),
+                "",
+                "",
+                ""
+            );
+        } else if (genericEvent instanceof ButtonInteractionEvent event) {
+            return String.format(
+                "%s:%s:%s:%s:%s",
+                genericEvent.getClass().getSimpleName(),
+                event.getId(),
+                "",
+                "",
+                ""
+            );
+        } else if (genericEvent instanceof StringSelectInteractionEvent event) {
+            return String.format(
+                "%s:%s:%s:%s:%s",
+                genericEvent.getClass().getSimpleName(),
+                event.getId(),
+                "",
+                "",
+                event.getInteraction().getSelectedOptions().get(0).getValue()
+            );
+        } else if (genericEvent instanceof EntitySelectInteractionEvent event) {
+            return String.format(
+                "%s:%s:%s:%s:%s",
+                genericEvent.getClass().getSimpleName(),
+                event.getId(),
+                "",
+                "",
+                ""
+            );
+        } else {
+            return String.format(
+                "%s:%s:%s:%s:%s",
+                genericEvent.getClass().getSimpleName(),
+                "",
+                "",
+                "",
+                ""
+            );
         }
     }
+
+    private Object[] resolveParamsForControllerMethod(Method method, GenericEvent event){
+        // TODO implement
+        return new Object[]{};
+    }
+
+    private record ControllerMethod(Object controller, Method method){}
 }

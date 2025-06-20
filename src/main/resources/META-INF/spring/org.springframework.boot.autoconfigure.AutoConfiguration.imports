@@ -1,5 +1,3 @@
 com.zgamelogic.discord.components.DiscordBot
 com.zgamelogic.discord.components.DiscordListener
 com.zgamelogic.discord.components.DiscordDispatcher
-com.zgamelogic.discord.components.DiscordHandlerMapping
-com.zgamelogic.discord.components.DiscordHandlerAdapter
