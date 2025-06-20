@@ -15,11 +15,13 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
 
+import static com.zgamelogic.discord.helpers.Translator.eventOptionToObject;
 import static com.zgamelogic.discord.helpers.Translator.isClassValidToObject;
 
 /**
@@ -208,46 +210,55 @@ public class DiscordDispatcher {
     }
 
     private Object[] resolveParamsForControllerMethod(Method method, GenericEvent event){
-        List<Object> params = new ArrayList<>();
-        for(Parameter parameter: method.getParameters()){
-            if (Event.class.isAssignableFrom(parameter.getType())) { // if it's the JDA event
-                params.add(event);
-                continue;
-            }
-            if(!parameter.isAnnotationPresent(EventProperty.class)) continue; // skip if no annotation
-            if(isClassValidToObject(parameter.getType())){ // event property
-
-            } else if(parameter.getType().isRecord()){ // event record
-
-            } else { // event object
-
-            }
-        }
-        return params.toArray();
+        return resolveParamsForArray(event, null, method.getParameters());
     }
 
-    private Object[] resolveParamsForArray(GenericEvent event, Parameter...parameters){
+    private Object[] resolveParamsForExceptionMethod(Method method, GenericEvent event, Throwable throwable){
+        return resolveParamsForArray(event, throwable, method.getParameters());
+    }
+
+    private Object[] resolveParamsForArray(GenericEvent event, Throwable throwable, Parameter...parameters){
         List<Object> params = new ArrayList<>();
         for(Parameter parameter: parameters){
             if (Event.class.isAssignableFrom(parameter.getType())) { // if it's the JDA event
                 params.add(event);
                 continue;
             }
-            if(!parameter.isAnnotationPresent(EventProperty.class)) continue; // skip if no annotation
+            if (Throwable.class.isAssignableFrom(parameter.getType())) { // if it's the throwable
+                params.add(throwable);
+                continue;
+            }
+            EventProperty eventProperty = parameter.getAnnotation(EventProperty.class);
+            String name = eventProperty.name() != null ? eventProperty.name() : parameter.getName();
             if(isClassValidToObject(parameter.getType())){ // event property
-
-            } else if(parameter.getType().isRecord()){ // event record
-
-            } else { // event object
-
+                params.add(extractOptionFromEvent(event, name));
+            } else { // event record or event class
+                Class<?> clazz = parameter.getType();
+                if(clazz.getDeclaredConstructors().length == 0) continue;
+                Constructor<?> con = clazz.getDeclaredConstructors()[0];
+                con.setAccessible(true);
+                Object obj;
+                try {
+                    obj = con.newInstance(resolveParamsForArray(event, throwable, con.getParameters()));
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+                params.add(obj);
             }
         }
         return params.toArray();
     }
 
-    private Object[] resolveParamsForExceptionMethod(Method method, GenericEvent event, Throwable throwable){
-        // TODO implement
-        return new Object[]{};
+    private Object extractOptionFromEvent(GenericEvent event, String name){
+        if (event instanceof SlashCommandInteractionEvent slashEvent) {
+            return eventOptionToObject(slashEvent.getOption(name));
+        } else if (event instanceof CommandAutoCompleteInteractionEvent autoCompleteEvent) {
+            return eventOptionToObject(autoCompleteEvent.getOption(name));
+        } else if (event instanceof ModalInteractionEvent modalEvent) {
+            if(modalEvent.getValue(name) == null) return null;
+            return modalEvent.getValue(name).getAsString();
+        }
+        return null;
     }
 
     private record ControllerMethod(Object controller, Method method){}
