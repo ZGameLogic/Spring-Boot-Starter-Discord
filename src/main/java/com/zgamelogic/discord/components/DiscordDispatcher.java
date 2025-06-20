@@ -1,6 +1,7 @@
 package com.zgamelogic.discord.components;
 
 import com.zgamelogic.discord.annotations.DiscordController;
+import com.zgamelogic.discord.annotations.DiscordExceptionHandler;
 import com.zgamelogic.discord.annotations.DiscordMapping;
 import com.zgamelogic.discord.annotations.DiscordMappings;
 import jakarta.annotation.PostConstruct;
@@ -17,6 +18,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
@@ -32,10 +34,12 @@ public class DiscordDispatcher {
 
     private final ApplicationContext applicationContext;
     private final Map<String, List<ControllerMethod>> mappings;
+    private final Map<Class<?>, List<ExceptionMethod>> exceptions;
 
     public DiscordDispatcher(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
         mappings = new HashMap<>();
+        exceptions = new HashMap<>();
     }
 
     @PostConstruct
@@ -62,9 +66,23 @@ public class DiscordDispatcher {
         }
     }
 
+    @PostConstruct
+    private void mapExceptions(){
+        for (Object bean : applicationContext.getBeansWithAnnotation(DiscordController.class).values()) {
+            for (Method method : bean.getClass().getDeclaredMethods()) {
+                if(!method.isAnnotationPresent(DiscordExceptionHandler.class)) continue;
+                DiscordExceptionHandler annotation = AnnotationUtils.findAnnotation(method, DiscordExceptionHandler.class);
+                ExceptionMethod methodHandle = new ExceptionMethod(bean, method, annotation);
+                exceptions.merge(bean.getClass(), new ArrayList<>(List.of(methodHandle)), (existingList, newList) -> {
+                    existingList.addAll(newList);
+                    return existingList;
+                });
+            }
+        }
+    }
+
     public void dispatch(GenericEvent event) {
         String eventKey = generateKeyFromEvent(event);
-        System.out.println(generateKeyFromEvent(event));
         mappings.getOrDefault(eventKey, new ArrayList<>()).forEach(controllerMethod -> {
             try {
                 Method method = controllerMethod.method();
@@ -72,10 +90,29 @@ public class DiscordDispatcher {
                 method.setAccessible(true);
                 method.invoke(controllerMethod.controller(), params);
             } catch (Exception e){
-                // TODO oh boy exception handlers need to happen
-                log.error("Error while dispatching event {}", eventKey);
+                try {
+                    throwControllerException(controllerMethod, event, e);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
+    }
+
+    private void throwControllerException(ControllerMethod controllerMethod, GenericEvent event, Throwable e) throws InvocationTargetException, IllegalAccessException {
+        for (ExceptionMethod exceptionMethod : exceptions.getOrDefault(controllerMethod.controller.getClass(), new ArrayList<>())) {
+            List<Class<?>> classes = List.of(exceptionMethod.annotation.value());
+            Class<?> current = e.getClass();
+            while(current != null){
+                if(classes.contains(current)){
+                    Object[] params = resolveParamsForExceptionMethod(controllerMethod.method, event, e);
+                    controllerMethod.method.invoke(controllerMethod.controller, params);
+                    return;
+                }
+                current = current.getSuperclass();
+            }
+        }
+        throw new RuntimeException(e);
     }
 
     /**
@@ -176,5 +213,11 @@ public class DiscordDispatcher {
         return new Object[]{};
     }
 
+    private Object[] resolveParamsForExceptionMethod(Method method, GenericEvent event, Throwable throwable){
+        // TODO implement
+        return new Object[]{};
+    }
+
     private record ControllerMethod(Object controller, Method method){}
+    private record ExceptionMethod(Object controller, Method method, DiscordExceptionHandler annotation){}
 }
