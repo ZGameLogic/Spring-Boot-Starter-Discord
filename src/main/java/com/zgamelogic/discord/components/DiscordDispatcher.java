@@ -172,7 +172,7 @@ public class DiscordDispatcher {
             return String.format(
                 "%s:%s:%s:%s:%s",
                 genericEvent.getClass().getSimpleName(),
-                event.getId(),
+                event.getModalId(),
                 "",
                 "",
                 ""
@@ -181,7 +181,7 @@ public class DiscordDispatcher {
             return String.format(
                 "%s:%s:%s:%s:%s",
                 genericEvent.getClass().getSimpleName(),
-                event.getId(),
+                event.getButton().getId(),
                 "",
                 "",
                 ""
@@ -190,7 +190,7 @@ public class DiscordDispatcher {
             return String.format(
                 "%s:%s:%s:%s:%s",
                 genericEvent.getClass().getSimpleName(),
-                event.getId(),
+                event.getSelectMenu().getId(),
                 "",
                 "",
                 event.getInteraction().getSelectedOptions().get(0).getValue()
@@ -199,7 +199,7 @@ public class DiscordDispatcher {
             return String.format(
                 "%s:%s:%s:%s:%s",
                 genericEvent.getClass().getSimpleName(),
-                event.getId(),
+                event.getSelectMenu().getId(),
                 "",
                 "",
                 ""
