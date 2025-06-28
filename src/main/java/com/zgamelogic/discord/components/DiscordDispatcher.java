@@ -97,7 +97,7 @@ public class DiscordDispatcher {
             } catch (InvocationTargetException e){
                 try {
                     throwControllerException(controllerMethod, event, e);
-                } catch (Exception ex) {
+                } catch (InvocationTargetException | IllegalAccessException ex) {
                     throw new RuntimeException(ex);
                 }
             } catch (IllegalAccessException e) {
@@ -228,12 +228,18 @@ public class DiscordDispatcher {
         List<Object> params = new ArrayList<>();
         if (parameters == null) return params.toArray();
         for(Parameter parameter: parameters){
-            if (Event.class.isAssignableFrom(parameter.getType())) { // if it's the JDA event
+            if (event != null && parameter.getType().isAssignableFrom(event.getClass())) {
                 params.add(event);
                 continue;
+            } else if (Event.class.isAssignableFrom(parameter.getType())){
+                params.add(null);
+                continue;
             }
-            if (Throwable.class.isAssignableFrom(parameter.getType())) { // if it's the throwable
+            if (throwable != null && parameter.getType().isAssignableFrom(throwable.getClass())) { // if it's the throwable
                 params.add(throwable);
+                continue;
+            } else if(Throwable.class.isAssignableFrom(parameter.getType())){
+                params.add(null);
                 continue;
             }
             EventProperty eventProperty = parameter.getAnnotation(EventProperty.class);
