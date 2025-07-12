@@ -1,0 +1,11 @@
+name: temp.yaml
+on:
+  push:
+    branches:
+      - master
+jobs:
+  bep:
+    runs-on: PiServer
+    steps:
+      - name: Print a message
+        run: echo "Hello from GitHub Actions!"
