@@ -8,4 +8,4 @@ jobs:
     runs-on: PiServer
     steps:
       - name: Print a message
-        run: echo "Hello from GitHub Actions!"
+        run: echo "Hello from GitHub Actions! ${{ secrets.OSSRH_USERNAME }}"
