@@ -1,6 +1,7 @@
 package com.zgamelogic.discord.components;
 
 import com.zgamelogic.discord.annotations.*;
+import com.zgamelogic.discord.data.Model;
 import jakarta.annotation.PostConstruct;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -89,14 +90,15 @@ public class DiscordDispatcher {
         String eventKey = generateKeyFromEvent(event);
         log.debug("Mapping ID: {}", eventKey);
         mappings.getOrDefault(eventKey, new ArrayList<>()).forEach(controllerMethod -> {
+            Model model = new Model();
             try {
                 Method method = controllerMethod.method();
-                Object[] params = resolveParamsForControllerMethod(method, event);
+                Object[] params = resolveParamsForControllerMethod(method, event, model);
                 method.setAccessible(true);
                 method.invoke(controllerMethod.controller(), params);
             } catch (InvocationTargetException e){
                 try {
-                    throwControllerException(controllerMethod, event, e);
+                    throwControllerException(controllerMethod, event, e, model);
                 } catch (InvocationTargetException | IllegalAccessException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -106,13 +108,13 @@ public class DiscordDispatcher {
         });
     }
 
-    private void throwControllerException(ControllerMethod controllerMethod, GenericEvent event, InvocationTargetException e) throws InvocationTargetException, IllegalAccessException {
+    private void throwControllerException(ControllerMethod controllerMethod, GenericEvent event, InvocationTargetException e, Model model) throws InvocationTargetException, IllegalAccessException {
         for (ExceptionMethod exceptionMethod : exceptions.getOrDefault(controllerMethod.controller.getClass(), new ArrayList<>())) {
             List<Class<?>> classes = List.of(exceptionMethod.annotation.value());
             Class<?> current = e.getTargetException().getClass();
             while(current != null){
                 if(classes.contains(current)){
-                    Object[] params = resolveParamsForExceptionMethod(exceptionMethod.method, event, e.getTargetException());
+                    Object[] params = resolveParamsForExceptionMethod(exceptionMethod.method, event, model, e.getTargetException());
                     exceptionMethod.method.setAccessible(true);
                     exceptionMethod.method.invoke(controllerMethod.controller, params);
                     return;
@@ -216,15 +218,15 @@ public class DiscordDispatcher {
         }
     }
 
-    private Object[] resolveParamsForControllerMethod(Method method, GenericEvent event){
-        return resolveParamsForArray(event, null, method.getParameters());
+    private Object[] resolveParamsForControllerMethod(Method method, GenericEvent event, Model model){
+        return resolveParamsForArray(event, null, model, method.getParameters());
     }
 
-    private Object[] resolveParamsForExceptionMethod(Method method, GenericEvent event, Throwable throwable){
-        return resolveParamsForArray(event, throwable, method.getParameters());
+    private Object[] resolveParamsForExceptionMethod(Method method, GenericEvent event, Model model, Throwable throwable){
+        return resolveParamsForArray(event, throwable, model, method.getParameters());
     }
 
-    private Object[] resolveParamsForArray(GenericEvent event, Throwable throwable, Parameter...parameters){
+    private Object[] resolveParamsForArray(GenericEvent event, Throwable throwable, Model model, Parameter...parameters){
         List<Object> params = new ArrayList<>();
         if (parameters == null) return params.toArray();
         for(Parameter parameter: parameters){
@@ -233,6 +235,9 @@ public class DiscordDispatcher {
                 continue;
             } else if (Event.class.isAssignableFrom(parameter.getType())){
                 params.add(null);
+                continue;
+            } else if (Model.class.isAssignableFrom(parameter.getType())){
+                params.add(model);
                 continue;
             }
             if (throwable != null && parameter.getType().isAssignableFrom(throwable.getClass())) { // if it's the throwable
@@ -253,7 +258,7 @@ public class DiscordDispatcher {
                 con.setAccessible(true);
                 Object obj;
                 try {
-                    obj = con.newInstance(resolveParamsForArray(event, throwable, con.getParameters()));
+                    obj = con.newInstance(resolveParamsForArray(event, throwable, model, con.getParameters()));
                 } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
