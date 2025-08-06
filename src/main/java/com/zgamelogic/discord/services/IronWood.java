@@ -2,6 +2,7 @@ package com.zgamelogic.discord.services;
 
 import com.zgamelogic.discord.data.Model;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.Component;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.components.textinput.TextInput;
@@ -20,6 +21,7 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.awt.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -48,7 +50,21 @@ public class IronWood {
         };
     }
 
-    private MessageEmbed generateEmbed(Element root, Model model) { return null; }
+    private MessageEmbed generateEmbed(Element root, Model model) {
+        EmbedBuilder eb = new EmbedBuilder();
+        String colorString = parseInput(root.getAttribute("color"), model);
+        if(!colorString.isEmpty())
+            eb.setColor(Color.decode(colorString));
+        eb.setTitle("", "");
+        eb.setAuthor("", "", "");
+        eb.setColor(null);
+        eb.setFooter("", "");
+        eb.setDescription("");
+        eb.setThumbnail("");
+        eb.setImage("");
+        eb.addField("", "", false);
+        return eb.build();
+    }
 
     public Component generateComponent(Element root, Model model) { return null; }
 
