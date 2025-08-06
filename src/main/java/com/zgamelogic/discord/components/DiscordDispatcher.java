@@ -2,6 +2,7 @@ package com.zgamelogic.discord.components;
 
 import com.zgamelogic.discord.annotations.*;
 import com.zgamelogic.discord.data.Model;
+import com.zgamelogic.discord.services.IronWood;
 import jakarta.annotation.PostConstruct;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -37,11 +38,13 @@ public class DiscordDispatcher {
     private final ApplicationContext applicationContext;
     private final Map<String, List<ControllerMethod>> mappings;
     private final Map<Class<?>, List<ExceptionMethod>> exceptions;
+    private final IronWood ironWood;
 
-    public DiscordDispatcher(ApplicationContext applicationContext) {
+    public DiscordDispatcher(ApplicationContext applicationContext, IronWood ironWood) {
         this.applicationContext = applicationContext;
         mappings = new HashMap<>();
         exceptions = new HashMap<>();
+        this.ironWood = ironWood;
     }
 
     @PostConstruct
@@ -58,7 +61,7 @@ public class DiscordDispatcher {
                 if(foundAnnotations != null) annotations.addAll(Arrays.asList(foundAnnotations.value()));
                 for(DiscordMapping mapping : annotations){
                     String key = generateKeyFromMethod(mapping, method);
-                    ControllerMethod methodHandle = new ControllerMethod(bean, method);
+                    ControllerMethod methodHandle = new ControllerMethod(bean, method, mapping.Document());
                     log.debug("Adding mappings for method: {}", method.getName());
                     log.debug("\tMapping ID: {}", key);
                     mappings.merge(key, new ArrayList<>(List.of(methodHandle)), (existingList, newList) -> {
@@ -95,7 +98,10 @@ public class DiscordDispatcher {
                 Method method = controllerMethod.method();
                 Object[] params = resolveParamsForControllerMethod(method, event, model);
                 method.setAccessible(true);
-                method.invoke(controllerMethod.controller(), params);
+                Object documentName = method.invoke(controllerMethod.controller(), params);
+                if(documentName == null && controllerMethod.document.isEmpty()) return;
+                String document = documentName != null ? documentName.toString() : controllerMethod.document;
+                ((GenericCommandInteractionEvent)event).replyModal(ironWood.generate(document, model)).queue();
             } catch (InvocationTargetException e){
                 try {
                     throwControllerException(controllerMethod, event, e, model);
@@ -135,12 +141,17 @@ public class DiscordDispatcher {
         List<Parameter> JDAParams = Arrays.stream(method.getParameters())
                 .filter(parameter -> Event.class.isAssignableFrom(parameter.getType()))
                 .toList();
-        if(JDAParams.size() != 1){
+        if(JDAParams.size() != 1 && mapping.Event() == Event.class){
             log.error("Error when mapping method: {}", method.getName());
-            log.error("Discord mappings must have one JDA event parameter.");
-            throw new RuntimeException("Discord mappings must have one JDA event parameter");
+            log.error("Discord mappings must have one JDA event parameter or include the event class in the annotation.");
+            throw new RuntimeException("Discord mappings must have one JDA event parameter or include the event class in the annotation.");
         }
-        Class<?> clazz = JDAParams.get(0).getType();
+        Class<?> clazz;
+        if(!JDAParams.isEmpty()) {
+            clazz = JDAParams.get(0).getType();
+        } else {
+            clazz = mapping.Event();
+        }
         return String.format(
             "%s:%s:%s:%s:%s",
             clazz.getSimpleName(),
@@ -280,6 +291,6 @@ public class DiscordDispatcher {
         return null;
     }
 
-    private record ControllerMethod(Object controller, Method method){}
+    private record ControllerMethod(Object controller, Method method, String document){}
     private record ExceptionMethod(Object controller, Method method, DiscordExceptionHandler annotation){}
 }

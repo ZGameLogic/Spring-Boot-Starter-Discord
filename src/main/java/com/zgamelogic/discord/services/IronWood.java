@@ -1,9 +1,7 @@
 package com.zgamelogic.discord.services;
 
 import com.zgamelogic.discord.data.Model;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.Component;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.components.textinput.TextInput;
@@ -16,6 +14,8 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -33,13 +33,6 @@ public class IronWood {
     public IronWood(@Value("${ironwood.directory:ironwood}") String directory, ResourcePatternResolver resourcePatternResolver) throws IOException {
         documents = new HashMap<>();
         loadDocuments(directory, resourcePatternResolver);
-    }
-
-    @PostConstruct
-    private void init(){
-        Model m = new Model();
-        m.addContext("guy 1", "Ben");
-        generate("default", m);
     }
 
     public <T extends SerializableData> T generate(String document, Model model) {
@@ -63,12 +56,33 @@ public class IronWood {
         String id = parseInput(root.getAttribute("id"), model);
         String title = parseInput(root.getAttribute("title"), model);
         Modal.Builder modal = Modal.create(id, title);
-        // TODO keep going ben
-//        modal.addComponents(ActionRow.of(TextInput.create("input", "", TextInputStyle.SHORT).build()));
+        NodeList children = root.getChildNodes();
+        for(int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if(child.getNodeType() != Node.ELEMENT_NODE) continue;
+            String textId = parseInput(((Element)child).getAttribute("id"), model);
+            String textLabel = parseInput(((Element)child).getAttribute("label"), model);
+            TextInputStyle textStyle = ((Element)child).getAttribute("style").toLowerCase().trim().equals("paragraph") ? TextInputStyle.PARAGRAPH : TextInputStyle.SHORT;
+            String textRequired = parseInput(((Element)child).getAttribute("required"), model);
+            String textMinLength = parseInput(((Element)child).getAttribute("min-length"), model);
+            String textMaxLength = parseInput(((Element)child).getAttribute("max-length"), model);
+            String textValue = parseInput(((Element)child).getAttribute("value"), model);
+            TextInput.Builder textBuilder = TextInput.create(textId, textLabel, textStyle);
+            if(!textRequired.isEmpty())
+                textBuilder.setRequired(Boolean.parseBoolean(textRequired));
+            if(!textMinLength.isEmpty())
+                textBuilder.setMinLength(Integer.parseInt(textMinLength));
+            if(!textMaxLength.isEmpty())
+                textBuilder.setMaxLength(Integer.parseInt(textMaxLength));
+            if(!textValue.isEmpty())
+                textBuilder.setValue(textValue);
+            modal.addComponents(ActionRow.of(textBuilder.build()));
+        }
         return modal.build();
     }
 
     private String parseInput(String input, Model model) {
+        if(input == null || input.isEmpty()) return "";
         try {
             Set<String> result = new HashSet<>();
             Pattern pattern = Pattern.compile("\\$\\{([^}]+)}");
