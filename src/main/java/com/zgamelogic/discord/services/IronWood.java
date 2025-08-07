@@ -13,10 +13,7 @@ import net.dv8tion.jda.api.utils.data.SerializableData;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -37,9 +34,22 @@ public class IronWood {
         loadDocuments(directory, resourcePatternResolver);
     }
 
-    public <T extends SerializableData> T generate(String document, Model model) {
+    public <T extends SerializableData> T generate(String document, Model model) throws NoSuchFieldException, IllegalAccessException {
         Element root = documents.get(document);
-        // TODO expand document with for loop functionality
+        NodeList forList = root.getElementsByTagName("for");
+        for(int i = 0; i < forList.getLength(); i++){
+            Element element = (Element) forList.item(i);
+            String collectionName = element.getAttribute("values").replace("${", "").replace("}", "");
+            Collection<?> collection = model.resolveCollection(collectionName);
+            for(int k = 0; k < collection.size(); k++){
+                NodeList forChildNodes = element.getChildNodes();
+                for(int j = forChildNodes.getLength() - 1; j >= 0; j--) {
+                    Node node = forChildNodes.item(j);
+                    root.insertBefore(node, element);
+                }
+            }
+            root.removeChild(element);
+        }
         return switch (root.getTagName()) {
             case "embed" -> (T) generateEmbed(root, model);
             case "component" -> (T) generateComponent(root, model);
@@ -49,6 +59,20 @@ public class IronWood {
                 yield null;
             }
         };
+    }
+
+    private void replaceWithIndex(Node node, String keyName, int index){
+        if(node.hasChildNodes()){
+            for(int i = 0; i < node.getChildNodes().getLength(); i++){
+                Node child = node.getChildNodes().item(i);
+                replaceWithIndex(child, keyName, index);
+            }
+        } else {
+            // TODO set child node strings to the right thing
+            // ${i} - current index -> index
+            // $[i].field - resolve index.field -> collection.get(index).field
+            // $[i] - resolve index -> collection.get(index)
+        }
     }
 
     private MessageEmbed generateEmbed(Element root, Model model) {

@@ -117,7 +117,7 @@ public class DiscordDispatcher {
                 } catch (InvocationTargetException | IllegalAccessException ex) {
                     throw new RuntimeException(ex);
                 }
-            } catch (IllegalAccessException e) {
+            } catch (IllegalAccessException | NoSuchFieldException e) {
                 throw new RuntimeException(e);
             }
         });

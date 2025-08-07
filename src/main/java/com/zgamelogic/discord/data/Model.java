@@ -35,6 +35,19 @@ public class Model {
         return data.get(key).toString();
     }
 
+    public Collection<?> resolveCollection(String key) throws NoSuchFieldException, IllegalAccessException {
+        Collection<?> collection;
+        if(key.contains(".")){
+            String[] parts = key.split("\\.");
+            String object = parts[0];
+            String rest = String.join(".", Arrays.copyOfRange(parts, 1, parts.length));
+            collection = (Collection<?>) resolveKey(rest, data.get(object));
+        } else {
+            collection = (Collection<?>) data.get(key);
+        }
+        return collection == null ? new ArrayList<>() : collection;
+    }
+
     private Object resolveKey(String key, Object object) throws NoSuchFieldException, IllegalAccessException {
         Field field = object.getClass().getDeclaredField(key);
         field.setAccessible(true);
