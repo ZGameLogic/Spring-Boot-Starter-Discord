@@ -55,14 +55,25 @@ public class IronWood {
         String colorString = parseInput(root.getAttribute("color"), model);
         if(!colorString.isEmpty())
             eb.setColor(Color.decode(colorString));
-        eb.setTitle("", "");
-        eb.setAuthor("", "", "");
-        eb.setColor(null);
-        eb.setFooter("", "");
-        eb.setDescription("");
-        eb.setThumbnail("");
-        eb.setImage("");
-        eb.addField("", "", false);
+        Optional.of(root.getElementsByTagName("title").item(0)).ifPresent(titleNode -> {
+            String title = parseInput(titleNode.getTextContent(), model);
+            String url = parseInput(((Element)titleNode).getAttribute("url"), model);
+            if(!title.isEmpty())
+                eb.setTitle(title, url.isEmpty() ? null : url);
+        });
+        Optional.of(root.getElementsByTagName("description").item(0)).ifPresent(descriptionNode -> {
+            String description = parseInput(descriptionNode.getTextContent(), model);
+            if(!description.isEmpty())
+                eb.setDescription(description);
+        });
+        // TODO finish the rest of these fields
+//        eb.setAuthor("", "", "");
+//        eb.setColor(null);
+//        eb.setFooter("", "");
+//        eb.setDescription("");
+//        eb.setThumbnail("");
+//        eb.setImage("");
+//        eb.addField("", "", false);
         return eb.build();
     }
 

@@ -4,6 +4,7 @@ import com.zgamelogic.discord.annotations.*;
 import com.zgamelogic.discord.data.Model;
 import com.zgamelogic.discord.services.IronWood;
 import jakarta.annotation.PostConstruct;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -11,6 +12,8 @@ import net.dv8tion.jda.api.events.interaction.command.*;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.utils.data.SerializableData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -101,7 +104,14 @@ public class DiscordDispatcher {
                 Object documentName = method.invoke(controllerMethod.controller(), params);
                 if(documentName == null && controllerMethod.document.isEmpty()) return;
                 String document = documentName != null ? documentName.toString() : controllerMethod.document;
-                ((GenericCommandInteractionEvent)event).replyModal(ironWood.generate(document, model)).queue();
+                SerializableData message = ironWood.generate(document, model);
+                // TODO handle model file uploads
+                if(message instanceof Modal){
+                    ((GenericCommandInteractionEvent)event).replyModal(ironWood.generate(document, model)).queue();
+                } else if(message instanceof MessageEmbed){
+                    ((GenericCommandInteractionEvent)event).replyEmbeds((MessageEmbed) message).queue();
+                }
+                // TODO component messages
             } catch (InvocationTargetException e){
                 try {
                     throwControllerException(controllerMethod, event, e, model);

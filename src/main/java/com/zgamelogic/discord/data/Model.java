@@ -1,15 +1,24 @@
 package com.zgamelogic.discord.data;
 
+import lombok.Getter;
+import net.dv8tion.jda.api.utils.FileUpload;
+
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Model {
     private final Map<String, Object> data;
 
+    @Getter
+    private final List<FileUpload> fileUploads;
+
     public Model() {
         this.data = new HashMap<>();
+        this.fileUploads = new ArrayList<>();
+    }
+
+    public void addFileUpload(FileUpload fileUpload) {
+        fileUploads.add(fileUpload);
     }
 
     public void addContext(String key, Object value) {
