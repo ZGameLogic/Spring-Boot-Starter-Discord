@@ -39,6 +39,7 @@ public class IronWood {
 
     public <T extends SerializableData> T generate(String document, Model model) {
         Element root = documents.get(document);
+        // TODO expand document with for loop functionality
         return switch (root.getTagName()) {
             case "embed" -> (T) generateEmbed(root, model);
             case "component" -> (T) generateComponent(root, model);
@@ -55,25 +56,61 @@ public class IronWood {
         String colorString = parseInput(root.getAttribute("color"), model);
         if(!colorString.isEmpty())
             eb.setColor(Color.decode(colorString));
-        Optional.of(root.getElementsByTagName("title").item(0)).ifPresent(titleNode -> {
+        Optional.ofNullable(root.getElementsByTagName("title").item(0)).ifPresent(titleNode -> {
             String title = parseInput(titleNode.getTextContent(), model);
             String url = parseInput(((Element)titleNode).getAttribute("url"), model);
             if(!title.isEmpty())
                 eb.setTitle(title, url.isEmpty() ? null : url);
         });
-        Optional.of(root.getElementsByTagName("description").item(0)).ifPresent(descriptionNode -> {
+        Optional.ofNullable(root.getElementsByTagName("description").item(0)).ifPresent(descriptionNode -> {
             String description = parseInput(descriptionNode.getTextContent(), model);
             if(!description.isEmpty())
                 eb.setDescription(description);
         });
-        // TODO finish the rest of these fields
-//        eb.setAuthor("", "", "");
-//        eb.setColor(null);
-//        eb.setFooter("", "");
-//        eb.setDescription("");
-//        eb.setThumbnail("");
-//        eb.setImage("");
-//        eb.addField("", "", false);
+        Optional.ofNullable(root.getElementsByTagName("author").item(0)).ifPresent(authorNode -> {
+            String author = parseInput(authorNode.getTextContent(), model);
+            String url = parseInput(((Element)authorNode).getAttribute("url"), model);
+            String iconUrl = parseInput(((Element)authorNode).getAttribute("iconUrl"), model);
+            if(!author.isEmpty())
+                eb.setAuthor(
+                    author,
+                    url.isEmpty() ? null : url,
+                    iconUrl.isEmpty() ? null : iconUrl
+                );
+        });
+        Optional.ofNullable(root.getElementsByTagName("footer").item(0)).ifPresent(footerNode -> {
+            String footer = parseInput(footerNode.getTextContent(), model);
+            String iconUrl = parseInput(((Element)footerNode).getAttribute("iconUrl"), model);
+            if(!footer.isEmpty())
+                eb.setFooter(
+                    footer,
+                    iconUrl.isEmpty() ? null : iconUrl
+                );
+        });
+        Optional.ofNullable(root.getElementsByTagName("description").item(0)).ifPresent(descNode -> {
+            String desc = parseInput(descNode.getTextContent(), model);
+            if(!desc.isEmpty())
+                eb.setDescription(desc);
+        });
+        Optional.ofNullable(root.getElementsByTagName("thumbnail").item(0)).ifPresent(thumbnailNode -> {
+            String url = parseInput(((Element)thumbnailNode).getAttribute("url"), model);
+            if(!url.isEmpty())
+                eb.setThumbnail(url);
+        });
+        Optional.ofNullable(root.getElementsByTagName("image").item(0)).ifPresent(imageNode -> {
+            String url = parseInput(((Element)imageNode).getAttribute("url"), model);
+            if(!url.isEmpty())
+                eb.setImage(url);
+        });
+        NodeList fields = root.getElementsByTagName("field");
+        for(int i = 0; i < fields.getLength(); i++) {
+            Element field = (Element) fields.item(i);
+            String name = parseInput(field.getAttribute("name"), model);
+            String value = parseInput(field.getTextContent(), model);
+            String inlineString = parseInput(field.getAttribute("inline"), model);
+            boolean inline = !inlineString.isEmpty() && Boolean.parseBoolean(inlineString);
+            eb.addField(name, value, inline);
+        }
         return eb.build();
     }
 

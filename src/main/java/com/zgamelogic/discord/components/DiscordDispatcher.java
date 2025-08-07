@@ -105,11 +105,10 @@ public class DiscordDispatcher {
                 if(documentName == null && controllerMethod.document.isEmpty()) return;
                 String document = documentName != null ? documentName.toString() : controllerMethod.document;
                 SerializableData message = ironWood.generate(document, model);
-                // TODO handle model file uploads
                 if(message instanceof Modal){
                     ((GenericCommandInteractionEvent)event).replyModal(ironWood.generate(document, model)).queue();
                 } else if(message instanceof MessageEmbed){
-                    ((GenericCommandInteractionEvent)event).replyEmbeds((MessageEmbed) message).queue();
+                    ((GenericCommandInteractionEvent)event).replyEmbeds((MessageEmbed) message).addFiles(model.getFileUploads()).queue();
                 }
                 // TODO component messages
             } catch (InvocationTargetException e){
