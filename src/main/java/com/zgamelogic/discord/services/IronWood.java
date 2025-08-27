@@ -14,10 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.*;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.io.IOException;
 import java.util.*;
@@ -27,38 +24,42 @@ import java.util.regex.Pattern;
 @Slf4j
 @Service
 public class IronWood {
-    private final Map<String, Element> documents;
+    private final Map<String, String> documents;
 
     public IronWood(@Value("${ironwood.directory:ironwood}") String directory, ResourcePatternResolver resourcePatternResolver) throws IOException {
         documents = new HashMap<>();
         loadDocuments(directory, resourcePatternResolver);
     }
 
-    public <T extends SerializableData> T generate(String document, Model model) throws NoSuchFieldException, IllegalAccessException {
-        Element root = documents.get(document);
-        NodeList forList = root.getElementsByTagName("for");
-        for(int i = 0; i < forList.getLength(); i++){
-            Element element = (Element) forList.item(i);
-            String collectionName = element.getAttribute("values").replace("${", "").replace("}", "");
-            Collection<?> collection = model.resolveCollection(collectionName);
-            for(int k = 0; k < collection.size(); k++){
-                NodeList forChildNodes = element.getChildNodes();
-                for(int j = forChildNodes.getLength() - 1; j >= 0; j--) {
-                    Node node = forChildNodes.item(j);
-                    root.insertBefore(node, element);
-                }
-            }
-            root.removeChild(element);
-        }
-        return switch (root.getTagName()) {
-            case "embed" -> (T) generateEmbed(root, model);
-            case "component" -> (T) generateComponent(root, model);
-            case "modal" -> (T) generateModal(root, model);
-            default -> {
-                log.warn("Unknown IronWood document type: {}", root.getTagName());
-                yield null;
-            }
-        };
+    public <T extends SerializableData> T generate(String documentName, Model model) throws NoSuchFieldException, IllegalAccessException {
+        String document = documents.get(documentName);
+        document = flattenFor(document, model);
+        document = parseInput(document, model);
+//        Element root = documents.get(document);
+//        NodeList forList = root.getElementsByTagName("for");
+//        for(int i = 0; i < forList.getLength(); i++){
+//            Element element = (Element) forList.item(i);
+//            String collectionName = element.getAttribute("values").replace("${", "").replace("}", "");
+//            Collection<?> collection = model.resolveCollection(collectionName);
+//            for(int k = 0; k < collection.size(); k++){
+//                NodeList forChildNodes = element.getChildNodes();
+//                for(int j = forChildNodes.getLength() - 1; j >= 0; j--) {
+//                    Node node = forChildNodes.item(j);
+//                    root.insertBefore(node, element);
+//                }
+//            }
+//            root.removeChild(element);
+//        }
+//        return switch (root.getTagName()) {
+//            case "embed" -> (T) generateEmbed(root, model);
+//            case "component" -> (T) generateComponent(root, model);
+//            case "modal" -> (T) generateModal(root, model);
+//            default -> {
+//                log.warn("Unknown IronWood document type: {}", root.getTagName());
+//                yield null;
+//            }
+//        };
+        return null;
     }
 
     private void replaceWithIndex(Node node, String keyName, int index){
@@ -69,9 +70,9 @@ public class IronWood {
             }
         } else {
             // TODO set child node strings to the right thing
-            // ${i} - current index -> index
-            // $[i].field - resolve index.field -> collection.get(index).field
-            // $[i] - resolve index -> collection.get(index)
+            // $[i] - current index -> index
+            // ${i.field} - resolve index.field -> collection.get(index).field
+            // ${i} - resolve index -> collection.get(index)
         }
     }
 
@@ -185,18 +186,44 @@ public class IronWood {
         }
     }
 
+    private String flattenFor(String input, Model model) {
+        Pattern forPattern = Pattern.compile("<for\\s+collection=\"([^\"]+)\">(.*?)</for>", Pattern.DOTALL);
+        Matcher forMatcher = forPattern.matcher(input);
+        StringBuffer result = new StringBuffer();
+
+        while (forMatcher.find()) {
+            String collectionName = forMatcher.group(1);
+            String forContent = forMatcher.group(2);
+
+            Collection<?> collection = model.resolveCollection(collectionName);
+            StringBuilder expanded = new StringBuilder();
+
+            for (int i = 0; i < collection.size(); i++) {
+                String itemContent = forContent
+                    .replace("$[i]", String.valueOf(i))
+                    .replaceAll("\\$\\{i\\.([a-zA-Z0-9_]+)}", "\\$\\{" + collectionName + "[" + i + "].$1}");
+                expanded.append(itemContent);
+            }
+
+            forMatcher.appendReplacement(result, Matcher.quoteReplacement(expanded.toString()));
+        }
+        forMatcher.appendTail(result);
+        return result.toString();
+    }
+
     private void loadDocuments(String directory, ResourcePatternResolver resourcePatternResolver) throws IOException {
         Arrays.stream(resourcePatternResolver.getResources("classpath:" + directory + "/*")).forEach(resource -> {
             String filename = resource.getFilename();
             if(filename == null) return;
             filename = filename.replace(".xml", "");
             try {
-                Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resource.getInputStream());
-                doc.getDocumentElement().normalize();
-                Element root = doc.getDocumentElement();
-                documents.put(filename, root);
+//                Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(resource.getInputStream());
+//                doc.getDocumentElement().normalize();
+//                Element root = doc.getDocumentElement();
+                String document = new String(resource.getInputStream().readAllBytes());
+                documents.put(filename, document);
                 log.info("Registered IronWood document: {}", filename);
-            } catch (SAXException | IOException | ParserConfigurationException e) {
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });

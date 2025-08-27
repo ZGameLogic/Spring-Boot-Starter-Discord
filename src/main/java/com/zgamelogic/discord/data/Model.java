@@ -35,7 +35,7 @@ public class Model {
         return data.get(key).toString();
     }
 
-    public Collection<?> resolveCollection(String key) throws NoSuchFieldException, IllegalAccessException {
+    public Collection<?> resolveCollection(String key) {
         Collection<?> collection;
         if(key.contains(".")){
             String[] parts = key.split("\\.");
@@ -48,15 +48,19 @@ public class Model {
         return collection == null ? new ArrayList<>() : collection;
     }
 
-    private Object resolveKey(String key, Object object) throws NoSuchFieldException, IllegalAccessException {
-        Field field = object.getClass().getDeclaredField(key);
-        field.setAccessible(true);
-        Object grabbed = field.get(object);
-        if(key.contains(".")){
-            String[] parts = key.split("\\.");
-            String rest = String.join(".", Arrays.copyOfRange(parts, 1, parts.length));
-            return resolveKey(rest, grabbed);
+    private Object resolveKey(String key, Object object) {
+        try {
+            Field field = object.getClass().getDeclaredField(key);
+            field.setAccessible(true);
+            Object grabbed = field.get(object);
+            if (key.contains(".")) {
+                String[] parts = key.split("\\.");
+                String rest = String.join(".", Arrays.copyOfRange(parts, 1, parts.length));
+                return resolveKey(rest, grabbed);
+            }
+            return grabbed;
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return null;
         }
-        return grabbed;
     }
 }
