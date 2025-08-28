@@ -5,6 +5,8 @@ import net.dv8tion.jda.api.utils.FileUpload;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Model {
     private final Map<String, Object> data;
@@ -26,41 +28,46 @@ public class Model {
     }
 
     public String resolveKey(String key) throws NoSuchFieldException, IllegalAccessException {
-        if(key.contains(".")){
-            String[] parts = key.split("\\.");
-            String object = parts[0];
-            String rest = String.join(".", Arrays.copyOfRange(parts, 1, parts.length));
-            return resolveKey(rest, data.get(object)).toString();
+        Object value = resolveKeyRecursive(key, data);
+        return value != null ? value.toString() : "";
+    }
+
+    private Object resolveKeyRecursive(String key, Object context) throws NoSuchFieldException, IllegalAccessException {
+        if (key == null || context == null) return null;
+        Pattern pattern = Pattern.compile("([a-zA-Z0-9_]+)(\\[(\\d+)])?");
+        String[] parts = key.split("\\.");
+        Object current = context;
+
+        for (String part : parts) {
+            Matcher matcher = pattern.matcher(part);
+            if (matcher.matches()) {
+                String fieldName = matcher.group(1);
+                String indexStr = matcher.group(3);
+
+                if (current instanceof Map) {
+                    current = ((Map<?, ?>) current).get(fieldName);
+                } else {
+                    Field field = current.getClass().getDeclaredField(fieldName);
+                    field.setAccessible(true);
+                    current = field.get(current);
+                }
+
+                if (indexStr != null && current instanceof List) {
+                    int idx = Integer.parseInt(indexStr);
+                    current = ((List<?>) current).get(idx);
+                }
+            }
         }
-        return data.get(key).toString();
+        return current;
     }
 
     public Collection<?> resolveCollection(String key) {
-        Collection<?> collection;
-        if(key.contains(".")){
-            String[] parts = key.split("\\.");
-            String object = parts[0];
-            String rest = String.join(".", Arrays.copyOfRange(parts, 1, parts.length));
-            collection = (Collection<?>) resolveKey(rest, data.get(object));
-        } else {
-            collection = (Collection<?>) data.get(key);
-        }
-        return collection == null ? new ArrayList<>() : collection;
-    }
-
-    private Object resolveKey(String key, Object object) {
+        Object value;
         try {
-            Field field = object.getClass().getDeclaredField(key);
-            field.setAccessible(true);
-            Object grabbed = field.get(object);
-            if (key.contains(".")) {
-                String[] parts = key.split("\\.");
-                String rest = String.join(".", Arrays.copyOfRange(parts, 1, parts.length));
-                return resolveKey(rest, grabbed);
-            }
-            return grabbed;
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            return null;
+            value = resolveKeyRecursive(key, data);
+        } catch (Exception e) {
+            return new ArrayList<>();
         }
+        return value instanceof Collection<?> ? (Collection<?>) value : new ArrayList<>();
     }
 }

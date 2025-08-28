@@ -19,7 +19,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -117,7 +120,8 @@ public class DiscordDispatcher {
                 } catch (InvocationTargetException | IllegalAccessException ex) {
                     throw new RuntimeException(ex);
                 }
-            } catch (IllegalAccessException | NoSuchFieldException e) {
+            } catch (IllegalAccessException | NoSuchFieldException | ParserConfigurationException | IOException |
+                     SAXException e) {
                 throw new RuntimeException(e);
             }
         });
