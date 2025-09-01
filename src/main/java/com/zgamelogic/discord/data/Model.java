@@ -1,6 +1,7 @@
 package com.zgamelogic.discord.data;
 
 import lombok.Getter;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.utils.FileUpload;
 
 import java.lang.reflect.Field;
@@ -13,14 +14,21 @@ public class Model {
 
     @Getter
     private final List<FileUpload> fileUploads;
+    @Getter
+    private final List<ActionRow> actionRows;
 
     public Model() {
         this.data = new HashMap<>();
         this.fileUploads = new ArrayList<>();
+        this.actionRows = new ArrayList<>();
     }
 
     public void addFileUpload(FileUpload fileUpload) {
         fileUploads.add(fileUpload);
+    }
+
+    public void addActionRow(ActionRow actionRow) {
+        actionRows.add(actionRow);
     }
 
     public void addContext(String key, Object value) {

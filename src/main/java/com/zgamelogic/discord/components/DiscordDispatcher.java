@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.events.interaction.command.*;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
-import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.data.SerializableData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,7 +111,7 @@ public class DiscordDispatcher {
                 if(message instanceof Modal){
                     ((GenericCommandInteractionEvent)event).replyModal(ironWood.generate(document, model)).queue();
                 } else if(message instanceof MessageEmbed){
-                    ((GenericCommandInteractionEvent)event).replyEmbeds((MessageEmbed) message).addFiles(model.getFileUploads()).queue();
+                    ((GenericCommandInteractionEvent)event).replyEmbeds((MessageEmbed) message).addFiles(model.getFileUploads()).addComponents(model.getActionRows()).queue();
                 }
                 // TODO component messages
             } catch (InvocationTargetException e){
