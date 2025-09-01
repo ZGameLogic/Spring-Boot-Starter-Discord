@@ -19,7 +19,10 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,7 +45,7 @@ public class IronWood {
         Possible ideas to make this better
         resolve emoji references? likes ${em:emoji_name} will turn into the mentionable?
          */
-        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(document);
+        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(document.getBytes(StandardCharsets.UTF_8)));
         doc.getDocumentElement().normalize();
         Element root = doc.getDocumentElement();
         return switch (root.getTagName()) {
