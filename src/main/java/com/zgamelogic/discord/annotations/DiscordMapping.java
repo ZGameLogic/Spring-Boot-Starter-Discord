@@ -1,5 +1,7 @@
 package com.zgamelogic.discord.annotations;
 
+import net.dv8tion.jda.api.events.Event;
+
 import java.lang.annotation.*;
 
 /**
@@ -52,4 +54,16 @@ public @interface DiscordMapping {
      * @return focused option of the command you would like to match it with
      */
     String FocusedOption() default "";
+
+    /**
+     * Use this to specify the event class without declaring it as the first method parameter
+     * @return Event class that the event listens to
+     */
+    Class<? extends Event> Event() default Event.class;
+
+    /**
+     * Use this to specify the document name to respond to a message
+     * @return Document name
+     */
+    String Document() default "";
 }

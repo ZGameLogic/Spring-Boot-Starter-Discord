@@ -1,8 +1,13 @@
 {
   "properties": [{
-      "name": "discord.token",
-      "type": "java.lang.String",
-      "description": "Discord Bot token."
+    "name": "ironwood.directory",
+    "type": "java.lang.String",
+    "description": "Directory for Ironwood data.",
+    "defaultValue": "ironwood"
+  },{
+    "name": "discord.token",
+    "type": "java.lang.String",
+    "description": "Discord Bot token."
   },{
     "name": "discord.gateway-intents",
     "type": "java.lang.String[]",
