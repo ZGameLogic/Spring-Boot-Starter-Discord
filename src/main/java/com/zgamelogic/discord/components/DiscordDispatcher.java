@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.events.interaction.command.*;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.data.SerializableData;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ import java.util.*;
 
 import static com.zgamelogic.discord.helpers.Translator.eventOptionToObject;
 import static com.zgamelogic.discord.helpers.Translator.isClassValidToObject;
+import static net.dv8tion.jda.api.components.Component.Type.TEXT_INPUT;
 
 /**
  * DiscordDispatcher is responsible for dispatching events to the appropriate handlers.
@@ -298,8 +300,9 @@ public class DiscordDispatcher {
         } else if (event instanceof CommandAutoCompleteInteractionEvent autoCompleteEvent) {
             return eventOptionToObject(autoCompleteEvent.getOption(name));
         } else if (event instanceof ModalInteractionEvent modalEvent) {
-            if(modalEvent.getValue(name) == null) return null;
-            return modalEvent.getValue(name).getAsString();
+            ModalMapping input = modalEvent.getValue(name);
+            if(input == null) return null;
+            return input.getType() == TEXT_INPUT ? input.getAsString() : input.getAsStringList();
         }
         return null;
     }

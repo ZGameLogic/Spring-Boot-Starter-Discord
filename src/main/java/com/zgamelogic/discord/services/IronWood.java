@@ -4,7 +4,7 @@ import com.zgamelogic.discord.data.Model;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.Component;
-import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.label.Label;
 import net.dv8tion.jda.api.components.textinput.TextInput;
 import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -18,7 +18,7 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.awt.*;
+import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -128,6 +128,7 @@ public class IronWood {
         String title = root.getAttribute("title");
         Modal.Builder modal = Modal.create(id, title);
         NodeList children = root.getChildNodes();
+        // TODO redo for select menus
         for(int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
             if(child.getNodeType() != Node.ELEMENT_NODE) continue;
@@ -138,7 +139,7 @@ public class IronWood {
             String textMinLength = ((Element)child).getAttribute("min-length");
             String textMaxLength = ((Element)child).getAttribute("max-length");
             String textValue = ((Element)child).getAttribute("value");
-            TextInput.Builder textBuilder = TextInput.create(textId, textLabel, textStyle);
+            TextInput.Builder textBuilder = TextInput.create(textId, textStyle);
             if(!textRequired.isEmpty())
                 textBuilder.setRequired(Boolean.parseBoolean(textRequired));
             if(!textMinLength.isEmpty())
@@ -147,7 +148,7 @@ public class IronWood {
                 textBuilder.setMaxLength(Integer.parseInt(textMaxLength));
             if(!textValue.isEmpty())
                 textBuilder.setValue(textValue);
-            modal.addComponents(ActionRow.of(textBuilder.build()));
+            modal.addComponents(Label.of(textLabel, textBuilder.build()));
         }
         return modal.build();
     }

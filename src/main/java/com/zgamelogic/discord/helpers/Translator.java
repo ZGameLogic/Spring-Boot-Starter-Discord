@@ -81,7 +81,8 @@ public abstract class Translator {
             Channel.class,
             Role.class,
             IMentionable.class,
-            Message.Attachment.class
+            Message.Attachment.class,
+            List.class
         ).contains(clazz);
     }
 
