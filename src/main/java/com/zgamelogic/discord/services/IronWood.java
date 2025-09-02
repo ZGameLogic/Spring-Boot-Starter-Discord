@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.Component;
 import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.selections.SelectOption;
 import net.dv8tion.jda.api.components.textinput.TextInput;
 import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -129,6 +130,15 @@ public class IronWood {
         Modal.Builder modal = Modal.create(id, title);
         NodeList children = root.getChildNodes();
         // TODO redo for select menus
+        /*
+        support both things:
+        <select>
+            <option id="1">option 1</option>
+            <option id="2">option 2</option>
+        </select>
+        <select options="select options" />
+         */
+//        List<SelectOption> options = new ArrayList<>();
         for(int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
             if(child.getNodeType() != Node.ELEMENT_NODE) continue;
