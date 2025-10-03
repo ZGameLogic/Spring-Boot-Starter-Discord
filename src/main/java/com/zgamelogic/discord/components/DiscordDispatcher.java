@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.events.interaction.command.*;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.data.SerializableData;
 import org.slf4j.Logger;
@@ -108,10 +109,16 @@ public class DiscordDispatcher {
                 if(documentName == null && controllerMethod.document.isEmpty()) return;
                 String document = documentName != null ? documentName.toString() : controllerMethod.document;
                 SerializableData message = ironWood.generate(document, model);
-                if(message instanceof Modal){
-                    ((GenericCommandInteractionEvent)event).replyModal(ironWood.generate(document, model)).queue();
-                } else if(message instanceof MessageEmbed){
-                    ((GenericCommandInteractionEvent)event).replyEmbeds((MessageEmbed) message).addFiles(model.getFileUploads()).addComponents(model.getActionRows()).queue();
+                if(((Interaction) event).isAcknowledged()){
+                    if (message instanceof MessageEmbed) {
+                        ((GenericCommandInteractionEvent) event).getHook().sendMessageEmbeds((MessageEmbed) message).addFiles(model.getFileUploads()).addComponents(model.getActionRows()).queue();
+                    }
+                } else {
+                    if (message instanceof Modal) {
+                        ((GenericCommandInteractionEvent) event).replyModal(ironWood.generate(document, model)).queue();
+                    } else if (message instanceof MessageEmbed) {
+                        ((GenericCommandInteractionEvent) event).replyEmbeds((MessageEmbed) message).addFiles(model.getFileUploads()).addComponents(model.getActionRows()).queue();
+                    }
                 }
                 // TODO component messages
             } catch (InvocationTargetException e){

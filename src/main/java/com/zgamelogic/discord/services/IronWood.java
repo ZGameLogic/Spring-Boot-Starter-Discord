@@ -4,7 +4,7 @@ import com.zgamelogic.discord.data.Model;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.Component;
-import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.label.Label;
 import net.dv8tion.jda.api.components.textinput.TextInput;
 import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -138,7 +138,7 @@ public class IronWood {
             String textMinLength = ((Element)child).getAttribute("min-length");
             String textMaxLength = ((Element)child).getAttribute("max-length");
             String textValue = ((Element)child).getAttribute("value");
-            TextInput.Builder textBuilder = TextInput.create(textId, textLabel, textStyle);
+            TextInput.Builder textBuilder = TextInput.create(textId, textStyle);
             if(!textRequired.isEmpty())
                 textBuilder.setRequired(Boolean.parseBoolean(textRequired));
             if(!textMinLength.isEmpty())
@@ -147,7 +147,7 @@ public class IronWood {
                 textBuilder.setMaxLength(Integer.parseInt(textMaxLength));
             if(!textValue.isEmpty())
                 textBuilder.setValue(textValue);
-            modal.addComponents(ActionRow.of(textBuilder.build()));
+            modal.addComponents(Label.of(textLabel, textBuilder.build()));
         }
         return modal.build();
     }
