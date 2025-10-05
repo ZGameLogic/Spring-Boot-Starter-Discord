@@ -20,6 +20,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -195,17 +196,21 @@ public class IronWood {
     }
 
     private void loadDocuments(String directory, ResourcePatternResolver resourcePatternResolver) throws IOException {
-        Arrays.stream(resourcePatternResolver.getResources("classpath:" + directory + "/*")).forEach(resource -> {
-            String filename = resource.getFilename();
-            if(filename == null) return;
-            filename = filename.replace(".xml", "");
-            try {
-                String document = new String(resource.getInputStream().readAllBytes());
-                documents.put(filename, document);
-                log.info("Registered IronWood document: {}", filename);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        try {
+            Arrays.stream(resourcePatternResolver.getResources("classpath:" + directory + "/*")).forEach(resource -> {
+                String filename = resource.getFilename();
+                if (filename == null) return;
+                filename = filename.replace(".xml", "");
+                try {
+                    String document = new String(resource.getInputStream().readAllBytes());
+                    documents.put(filename, document);
+                    log.info("Registered IronWood document: {}", filename);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } catch (FileNotFoundException e) {
+            log.debug("No Ironwood directory found");
+        }
     }
 }
