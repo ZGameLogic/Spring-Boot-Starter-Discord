@@ -8,11 +8,11 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Method;
 
 @Component
-public class CustomEventListenerFactory implements EventListenerFactory {
+public class SlashEventListenerFactory implements EventListenerFactory {
 
     @Override
     public boolean supportsMethod(Method method) {
-        return AnnotatedElementUtils.hasAnnotation(method, CustomEventListener.class);
+        return AnnotatedElementUtils.hasAnnotation(method, SlashCommandMapping.class);
     }
 
     @Override
@@ -21,8 +21,8 @@ public class CustomEventListenerFactory implements EventListenerFactory {
         Class<?> targetClass,
         Method method) {
 
-        CustomEventListener ann =
-            AnnotatedElementUtils.findMergedAnnotation(method, CustomEventListener.class);
+        SlashCommandMapping ann =
+            AnnotatedElementUtils.findMergedAnnotation(method, SlashCommandMapping.class);
 
         return new FilteringApplicationListener(beanName, targetClass, method, ann);
     }

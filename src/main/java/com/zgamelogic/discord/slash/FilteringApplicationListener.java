@@ -7,28 +7,25 @@ import java.lang.reflect.Method;
 
 class FilteringApplicationListener extends ApplicationListenerMethodAdapter {
 
-    private final CustomEventListener ann;
+    private final SlashCommandMapping ann;
+    private final Method method;
 
     FilteringApplicationListener(
         String beanName,
         Class<?> targetClass,
         Method method,
-        CustomEventListener ann) {
-
+        SlashCommandMapping ann
+    ) {
         super(beanName, targetClass, method);
+        this.method = method;
         this.ann = ann;
     }
 
 
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
-        if (!(event instanceof SlashCommandInteractionEventApplicationEvent e)) {
-            return;
-        }
-
-        if (!matches(e)) {
-            return;
-        }
+        if (!(event instanceof SlashCommandInteractionEventApplicationEvent e)) return;
+        if (!matches(e)) return;
 
         // IMPORTANT: this calls through the Spring proxy
         super.onApplicationEvent(event);

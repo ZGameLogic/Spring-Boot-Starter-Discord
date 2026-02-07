@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @EventListener(value = SlashCommandInteractionEventApplicationEvent.class)
-public @interface CustomEventListener {
+public @interface SlashCommandMapping {
     String id();
     String group() default "";
     String sub() default "";
