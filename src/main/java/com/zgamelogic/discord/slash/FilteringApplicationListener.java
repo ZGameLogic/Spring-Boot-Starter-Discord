@@ -40,6 +40,7 @@ class FilteringApplicationListener extends ApplicationListenerMethodAdapter {
     @Override
     protected Object[] resolveArguments(ApplicationEvent event) {
 //        return super.resolveArguments(event);
+
         // TODO map method parameters to event method
         return new Object[]{event, "This is a string"};
     }
