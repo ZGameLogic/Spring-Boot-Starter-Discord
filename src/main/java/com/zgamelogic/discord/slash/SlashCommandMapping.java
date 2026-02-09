@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@EventListener(value = SlashCommandInteractionEventApplicationEvent.class)
+@EventListener(value = DiscordEvent.class)
 public @interface SlashCommandMapping {
     String id();
     String group() default "";

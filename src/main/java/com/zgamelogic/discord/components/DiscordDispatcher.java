@@ -10,14 +10,14 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.*;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.GenericSelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.data.SerializableData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
@@ -45,10 +45,12 @@ public class DiscordDispatcher {
     private final ApplicationContext applicationContext;
     private final Map<String, List<ControllerMethod>> mappings;
     private final Map<Class<?>, List<ExceptionMethod>> exceptions;
+    private final ApplicationEventPublisher eventPublisher;
     private final IronWood ironWood;
 
-    public DiscordDispatcher(ApplicationContext applicationContext, IronWood ironWood) {
+    public DiscordDispatcher(ApplicationContext applicationContext, ApplicationEventPublisher eventPublisher, IronWood ironWood) {
         this.applicationContext = applicationContext;
+        this.eventPublisher = eventPublisher;
         mappings = new HashMap<>();
         exceptions = new HashMap<>();
         this.ironWood = ironWood;
@@ -219,16 +221,7 @@ public class DiscordDispatcher {
                 "",
                 ""
             );
-        } else if (genericEvent instanceof StringSelectInteractionEvent event) {
-            return String.format(
-                "%s:%s:%s:%s:%s",
-                genericEvent.getClass().getSimpleName(),
-                event.getSelectMenu().getCustomId(),
-                "",
-                "",
-                event.getInteraction().getSelectedOptions().get(0).getValue()
-            );
-        } else if (genericEvent instanceof EntitySelectInteractionEvent event) {
+        } else if (genericEvent instanceof GenericSelectMenuInteractionEvent<?, ?> event) {
             return String.format(
                 "%s:%s:%s:%s:%s",
                 genericEvent.getClass().getSimpleName(),
