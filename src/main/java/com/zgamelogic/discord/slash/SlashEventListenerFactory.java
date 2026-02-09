@@ -9,6 +9,7 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 @Component
@@ -23,7 +24,9 @@ public class SlashEventListenerFactory implements EventListenerFactory, Applicat
 
     @Override
     public boolean supportsMethod(Method method) {
-        return AnnotatedElementUtils.hasAnnotation(method, SlashCommandMapping.class);
+        return
+                AnnotatedElementUtils.hasAnnotation(method, SlashCommandMapping.class) ||
+                AnnotatedElementUtils.hasAnnotation(method, GenericCommandMapping.class);
     }
 
     @Override
@@ -32,9 +35,10 @@ public class SlashEventListenerFactory implements EventListenerFactory, Applicat
         Class<?> targetClass,
         Method method) {
 
-        SlashCommandMapping ann =
+        // TODO this is pretty bad, need to find a better way to handle multiple annotations
+        Annotation ann =
             AnnotatedElementUtils.findMergedAnnotation(method, SlashCommandMapping.class);
 
-        return new FilteringApplicationListener(beanName, targetClass, method, ann);
+        return new FilteringApplicationListener(beanName, targetClass, method, ann, applicationContext);
     }
 }
