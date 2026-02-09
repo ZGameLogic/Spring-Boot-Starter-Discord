@@ -1,6 +1,7 @@
 package com.zgamelogic.discord.slash;
 
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -11,7 +12,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @EventListener(value = DiscordEvent.class)
 public @interface SlashCommandMapping {
-    String id();
+    @AliasFor("id")
+    String value() default "";
+    @AliasFor("value")
+    String id() default "";
     String group() default "";
     String sub() default "";
 }
