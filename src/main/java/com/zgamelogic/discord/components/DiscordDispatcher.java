@@ -3,6 +3,7 @@ package com.zgamelogic.discord.components;
 import com.zgamelogic.discord.annotations.*;
 import com.zgamelogic.discord.data.Model;
 import com.zgamelogic.discord.services.IronWood;
+import com.zgamelogic.discord.slash.DiscordEvent;
 import jakarta.annotation.PostConstruct;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.Event;
@@ -100,6 +101,7 @@ public class DiscordDispatcher {
 
     public void dispatch(GenericEvent event) {
         String eventKey = generateKeyFromEvent(event);
+        eventPublisher.publishEvent(new DiscordEvent(this, event));
         log.debug("Mapping ID: {}", eventKey);
         mappings.getOrDefault(eventKey, new ArrayList<>()).forEach(controllerMethod -> {
             Model model = new Model();

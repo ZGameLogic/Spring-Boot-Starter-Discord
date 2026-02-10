@@ -1,5 +1,7 @@
 package com.zgamelogic.discord.slash;
 
+import com.zgamelogic.discord.annotations.EventProperty;
+import com.zgamelogic.discord.data.Model;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -12,18 +14,28 @@ import net.dv8tion.jda.api.events.interaction.component.GenericSelectMenuInterac
 import org.jetbrains.annotations.Nullable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
-import org.springframework.context.event.ApplicationListenerMethodAdapter;
+import org.springframework.context.event.GenericApplicationListener;
+import org.springframework.core.ResolvableType;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.zgamelogic.discord.helpers.Translator.eventOptionToObject;
+import static com.zgamelogic.discord.helpers.Translator.isClassValidToObject;
 
 @Slf4j
-class FilteringApplicationListener extends ApplicationListenerMethodAdapter {
+class FilteringApplicationListener implements GenericApplicationListener {
 
     private final ApplicationContext applicationContext;
     private final Annotation ann;
     private final Method method;
     private final String methodKey;
+    private final String beanName;
 
     FilteringApplicationListener(
         String beanName,
@@ -32,25 +44,25 @@ class FilteringApplicationListener extends ApplicationListenerMethodAdapter {
         Annotation ann,
         ApplicationContext applicationContext
     ) {
-        super(beanName, targetClass, method);
+        this.beanName = beanName;
         this.method = method;
         this.ann = ann;
         methodKey = generateKeyFromMethod(ann, method);
         this.applicationContext = applicationContext;
     }
 
-    @Nullable
-    @Override
-    protected Object[] resolveArguments(ApplicationEvent event) {
-        // TODO map method parameters to event method
-        return new Object[]{event, "This is a string"};
-    }
-
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
         if (!(event instanceof DiscordEvent e)) return;
         if (!generateKeyFromEvent(e.getEvent()).equals(methodKey)) return;
-        super.onApplicationEvent(event);
+        try {
+            Model model = new Model();
+            Object bean = applicationContext.getBean(beanName);
+            Object[] params = resolveParamsForControllerMethod(method, e.getEvent(), model);
+            method.invoke(bean, params);
+        } catch (Exception ex) {
+            log.error("nope", ex);
+        }
     }
 
     // TODO gotta change this to be more flexible with the annotation...
@@ -141,5 +153,68 @@ class FilteringApplicationListener extends ApplicationListenerMethodAdapter {
                 ""
             );
         }
+    }
+
+    @Override
+    public boolean supportsEventType(ResolvableType eventType) {
+        return true;
+    }
+
+    private Object[] resolveParamsForControllerMethod(Method method, GenericEvent event, Model model){
+        return resolveParamsForArray(event, null, model, method.getParameters());
+    }
+
+    private Object[] resolveParamsForArray(GenericEvent event, Throwable throwable, Model model, Parameter...parameters){
+        List<Object> params = new ArrayList<>();
+        if (parameters == null) return params.toArray();
+        for(Parameter parameter: parameters){
+            if (event != null && parameter.getType().isAssignableFrom(event.getClass())) {
+                params.add(event);
+                continue;
+            } else if (Event.class.isAssignableFrom(parameter.getType())){
+                params.add(null);
+                continue;
+            } else if (Model.class.isAssignableFrom(parameter.getType())){
+                params.add(model);
+                continue;
+            }
+            if (throwable != null && parameter.getType().isAssignableFrom(throwable.getClass())) { // if it's the throwable
+                params.add(throwable);
+                continue;
+            } else if(Throwable.class.isAssignableFrom(parameter.getType())){
+                params.add(null);
+                continue;
+            }
+            EventProperty eventProperty = parameter.getAnnotation(EventProperty.class);
+            String name = eventProperty != null && !eventProperty.name().isEmpty() ? eventProperty.name() : parameter.getName();
+            if(isClassValidToObject(parameter.getType())){ // event property
+                params.add(extractOptionFromEvent(event, name));
+            } else { // event record or event class
+                Class<?> clazz = parameter.getType();
+                if(clazz.getDeclaredConstructors().length == 0) continue;
+                Constructor<?> con = clazz.getDeclaredConstructors()[0];
+                con.setAccessible(true);
+                Object obj;
+                try {
+                    obj = con.newInstance(resolveParamsForArray(event, throwable, model, con.getParameters()));
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+                params.add(obj);
+            }
+        }
+        return params.toArray();
+    }
+
+    private Object extractOptionFromEvent(GenericEvent event, String name){
+        if (event instanceof SlashCommandInteractionEvent slashEvent) {
+            return eventOptionToObject(slashEvent.getOption(name));
+        } else if (event instanceof CommandAutoCompleteInteractionEvent autoCompleteEvent) {
+            return eventOptionToObject(autoCompleteEvent.getOption(name));
+        } else if (event instanceof ModalInteractionEvent modalEvent) {
+            if(modalEvent.getValue(name) == null) return null;
+            return modalEvent.getValue(name).getAsString();
+        }
+        return null;
     }
 }
