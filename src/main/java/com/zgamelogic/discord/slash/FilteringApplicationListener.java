@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionE
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.GenericSelectMenuInteractionEvent;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.GenericApplicationListener;
@@ -32,27 +32,19 @@ import static com.zgamelogic.discord.helpers.Translator.isClassValidToObject;
 class FilteringApplicationListener implements GenericApplicationListener {
 
     private final ApplicationContext applicationContext;
-    private final Annotation ann;
     private final Method method;
     private final String methodKey;
     private final String beanName;
 
-    FilteringApplicationListener(
-        String beanName,
-        Class<?> targetClass,
-        Method method,
-        Annotation ann,
-        ApplicationContext applicationContext
-    ) {
+    FilteringApplicationListener(String beanName, Method method, Annotation ann, ApplicationContext applicationContext) {
         this.beanName = beanName;
         this.method = method;
-        this.ann = ann;
-        methodKey = generateKeyFromMethod(ann, method);
+        methodKey = generateKeyFromMethod(ann);
         this.applicationContext = applicationContext;
     }
 
     @Override
-    public void onApplicationEvent(ApplicationEvent event) {
+    public void onApplicationEvent(@NotNull ApplicationEvent event) {
         if (!(event instanceof DiscordEvent e)) return;
         if (!generateKeyFromEvent(e.getEvent()).equals(methodKey)) return;
         try {
@@ -66,7 +58,7 @@ class FilteringApplicationListener implements GenericApplicationListener {
     }
 
     // TODO gotta change this to be more flexible with the annotation...
-    private String generateKeyFromMethod(Annotation mapping, Method method){
+    private String generateKeyFromMethod(Annotation mapping){
         Class<?> clazz = null;
         String id = "";
         String subId = "";
