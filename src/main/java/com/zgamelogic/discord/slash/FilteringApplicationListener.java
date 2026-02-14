@@ -51,7 +51,8 @@ class FilteringApplicationListener implements GenericApplicationListener {
             Model model = new Model();
             Object bean = applicationContext.getBean(beanName);
             Object[] params = resolveParamsForControllerMethod(method, e.getEvent(), model);
-            method.invoke(bean, params);
+            Object returned = method.invoke(bean, params);
+            System.out.println(returned);
         } catch (Exception ex) {
             log.error("nope", ex);
         }
