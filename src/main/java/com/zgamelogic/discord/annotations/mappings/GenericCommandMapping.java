@@ -1,6 +1,6 @@
 package com.zgamelogic.discord.annotations.mappings;
 
-import com.zgamelogic.discord.slash.DiscordEvent;
+import com.zgamelogic.discord.data.DiscordEvent;
 import net.dv8tion.jda.api.events.Event;
 import org.springframework.context.event.EventListener;
 

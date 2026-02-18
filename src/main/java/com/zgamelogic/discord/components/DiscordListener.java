@@ -1,6 +1,6 @@
 package com.zgamelogic.discord.components;
 
-import com.zgamelogic.discord.slash.DiscordEvent;
+import com.zgamelogic.discord.data.DiscordEvent;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;

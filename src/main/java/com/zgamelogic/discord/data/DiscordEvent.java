@@ -1,4 +1,4 @@
-package com.zgamelogic.discord.slash;
+package com.zgamelogic.discord.data;
 
 import lombok.Getter;
 import net.dv8tion.jda.api.events.GenericEvent;

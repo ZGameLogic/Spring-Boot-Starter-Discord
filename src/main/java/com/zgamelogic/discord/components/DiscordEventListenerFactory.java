@@ -1,4 +1,4 @@
-package com.zgamelogic.discord.slash;
+package com.zgamelogic.discord.components;
 
 import com.zgamelogic.discord.annotations.mappings.*;
 import org.jetbrains.annotations.NotNull;

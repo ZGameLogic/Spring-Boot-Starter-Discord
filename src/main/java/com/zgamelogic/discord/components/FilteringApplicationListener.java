@@ -1,7 +1,8 @@
-package com.zgamelogic.discord.slash;
+package com.zgamelogic.discord.components;
 
 import com.zgamelogic.discord.annotations.EventProperty;
 import com.zgamelogic.discord.annotations.mappings.*;
+import com.zgamelogic.discord.data.DiscordEvent;
 import com.zgamelogic.discord.data.Model;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.Event;
