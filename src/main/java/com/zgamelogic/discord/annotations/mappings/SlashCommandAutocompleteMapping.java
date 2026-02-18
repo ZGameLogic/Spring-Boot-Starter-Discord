@@ -1,5 +1,6 @@
-package com.zgamelogic.discord.slash;
+package com.zgamelogic.discord.annotations.mappings;
 
+import com.zgamelogic.discord.slash.DiscordEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AliasFor;
 
@@ -11,11 +12,12 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @EventListener(value = DiscordEvent.class)
-public @interface SlashCommandMapping {
+public @interface SlashCommandAutocompleteMapping {
     @AliasFor("id")
     String value() default "";
     @AliasFor("value")
     String id() default "";
     String group() default "";
     String sub() default "";
+    String focused() default "";
 }

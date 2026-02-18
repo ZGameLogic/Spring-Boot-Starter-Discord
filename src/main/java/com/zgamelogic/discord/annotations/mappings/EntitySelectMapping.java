@@ -1,6 +1,6 @@
-package com.zgamelogic.discord.slash;
+package com.zgamelogic.discord.annotations.mappings;
 
-import net.dv8tion.jda.api.events.Event;
+import com.zgamelogic.discord.slash.DiscordEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AliasFor;
 
@@ -12,13 +12,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @EventListener(value = DiscordEvent.class)
-public @interface GenericCommandMapping {
-    @AliasFor("name")
+public @interface EntitySelectMapping {
+    @AliasFor("id")
     String value() default "";
     @AliasFor("value")
-    String name() default "";
-    String groupName() default "";
-    String subName() default "";
-    String focussedOption() default "";
-    Class<? extends Event> event() default Event.class;
+    String id() default "";
 }

@@ -1,6 +1,7 @@
 package com.zgamelogic.discord.slash;
 
 import com.zgamelogic.discord.annotations.EventProperty;
+import com.zgamelogic.discord.annotations.mappings.*;
 import com.zgamelogic.discord.data.Model;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.Event;
@@ -8,9 +9,12 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.GenericSelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
@@ -52,13 +56,11 @@ class FilteringApplicationListener implements GenericApplicationListener {
             Object bean = applicationContext.getBean(beanName);
             Object[] params = resolveParamsForControllerMethod(method, e.getEvent(), model);
             Object returned = method.invoke(bean, params);
-            System.out.println(returned);
         } catch (Exception ex) {
             log.error("nope", ex);
         }
     }
 
-    // TODO gotta change this to be more flexible with the annotation...
     private String generateKeyFromMethod(Annotation mapping){
         Class<?> clazz = null;
         String id = "";
@@ -66,18 +68,34 @@ class FilteringApplicationListener implements GenericApplicationListener {
         String groupName = "";
         String focusedOption = "";
 
-        // TODO include other command mappings for the different annotations
         if(mapping instanceof SlashCommandMapping slashCommandMapping){
             clazz = SlashCommandInteractionEvent.class;
             id = slashCommandMapping.id();
             subId = slashCommandMapping.sub();
             groupName = slashCommandMapping.group();
+        } else if(mapping instanceof SlashCommandAutocompleteMapping slashCommandMapping){
+            clazz = CommandAutoCompleteInteractionEvent.class;
+            id = slashCommandMapping.id();
+            subId = slashCommandMapping.sub();
+            groupName = slashCommandMapping.group();
+            focusedOption = slashCommandMapping.focused();
+        } else if(mapping instanceof MessageContextMapping slashCommandMapping){
+            clazz = MessageContextInteractionEvent.class;
+            id = slashCommandMapping.id();
+        } else if (mapping instanceof ButtonMapping buttonMapping) {
+            clazz = ButtonInteractionEvent.class;
+            id = buttonMapping.id();
+        } else if (mapping instanceof StringSelectMapping buttonMapping) {
+            clazz = StringSelectInteractionEvent.class;
+            id = buttonMapping.id();
+        } else if (mapping instanceof EntitySelectMapping buttonMapping) {
+            clazz = EntitySelectInteractionEvent.class;
+            id = buttonMapping.id();
+        } else if (mapping instanceof ModalMapping buttonMapping) {
+            clazz = ModalInteractionEvent.class;
+            id = buttonMapping.id();
         } else if (mapping instanceof GenericCommandMapping discordMapping){
             clazz = discordMapping.event() == Event.class ? null : discordMapping.event();
-            id = discordMapping.name();
-            subId = discordMapping.subName();
-            groupName = discordMapping.groupName();
-            focusedOption = discordMapping.focussedOption();
         }
 
         return String.format(

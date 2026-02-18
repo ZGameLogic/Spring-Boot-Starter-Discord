@@ -1,8 +1,10 @@
 package com.zgamelogic.discord.components;
 
+import com.zgamelogic.discord.slash.DiscordEvent;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,14 +12,14 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DiscordListener extends ListenerAdapter {
-    private final DiscordDispatcher dispatcher;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public DiscordListener(DiscordDispatcher dispatcher) {
-        this.dispatcher = dispatcher;
+    public DiscordListener(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
     public void onGenericEvent(@NotNull GenericEvent event) {
-        dispatcher.dispatch(event);
+        eventPublisher.publishEvent(new DiscordEvent(this, event));
     }
 }

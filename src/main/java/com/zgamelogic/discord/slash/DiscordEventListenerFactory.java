@@ -1,5 +1,6 @@
 package com.zgamelogic.discord.slash;
 
+import com.zgamelogic.discord.annotations.mappings.*;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -17,10 +18,16 @@ import java.util.function.Predicate;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class SlashEventListenerFactory implements EventListenerFactory, ApplicationContextAware {
+public class DiscordEventListenerFactory implements EventListenerFactory, ApplicationContextAware {
     private ApplicationContext applicationContext;
     private final static List<Class<? extends Annotation>> SUPPORTED_ANNOTATIONS = List.of(
         SlashCommandMapping.class,
+        SlashCommandAutocompleteMapping.class,
+        MessageContextMapping.class,
+        ButtonMapping.class,
+        StringSelectMapping.class,
+        EntitySelectMapping.class,
+        ModalMapping.class,
         GenericCommandMapping.class
     );
 
