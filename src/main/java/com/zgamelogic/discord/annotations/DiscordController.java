@@ -1,6 +1,6 @@
 package com.zgamelogic.discord.annotations;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 
 import java.lang.annotation.*;
 
@@ -12,5 +12,5 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Component
+@Controller
 public @interface DiscordController {}

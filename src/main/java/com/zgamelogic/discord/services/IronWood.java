@@ -1,7 +1,6 @@
 package com.zgamelogic.discord.services;
 
 import com.zgamelogic.discord.data.Model;
-import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.Component;
 import net.dv8tion.jda.api.components.label.Label;
@@ -10,6 +9,7 @@ import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.data.SerializableData;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
@@ -27,9 +27,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Slf4j
 @Service
 public class IronWood {
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(IronWood.class);
     private final Map<String, String> documents;
 
     public IronWood(@Value("${ironwood.directory:ironwood}") String directory, ResourcePatternResolver resourcePatternResolver) throws IOException {

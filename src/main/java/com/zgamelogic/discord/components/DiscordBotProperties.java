@@ -1,6 +1,5 @@
 package com.zgamelogic.discord.components;
 
-import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -9,7 +8,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Ben Shabowski
  * @since 1.0.0
  */
-@Getter
 @ConfigurationProperties(prefix = "discord")
 public class DiscordBotProperties {
     /**
@@ -54,4 +52,23 @@ public class DiscordBotProperties {
         this.eventPassthrough = eventPassthrough;
     }
 
+    public boolean isEventPassthrough() {
+        return eventPassthrough;
+    }
+
+    public String getMemberCachePolicy() {
+        return memberCachePolicy;
+    }
+
+    public String[] getCacheFlags() {
+        return cacheFlags;
+    }
+
+    public String[] getGatewayIntents() {
+        return gatewayIntents;
+    }
+
+    public String getToken() {
+        return token;
+    }
 }
