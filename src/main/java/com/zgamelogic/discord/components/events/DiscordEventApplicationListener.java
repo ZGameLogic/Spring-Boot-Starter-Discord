@@ -1,8 +1,9 @@
-package com.zgamelogic.discord.components;
+package com.zgamelogic.discord.components.events;
 
 import com.zgamelogic.discord.annotations.EventProperty;
 import com.zgamelogic.discord.annotations.mappings.*;
 import com.zgamelogic.discord.data.DiscordEvent;
+import com.zgamelogic.discord.data.DiscordExceptionEvent;
 import com.zgamelogic.discord.data.Model;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -34,14 +35,14 @@ import java.util.List;
 import static com.zgamelogic.discord.helpers.Translator.eventOptionToObject;
 import static com.zgamelogic.discord.helpers.Translator.isClassValidToObject;
 
-class FilteringApplicationListener implements GenericApplicationListener {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(FilteringApplicationListener.class);
+class DiscordEventApplicationListener implements GenericApplicationListener {
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordEventApplicationListener.class);
     private final ApplicationContext applicationContext;
     private final Method method;
     private final String methodKey;
     private final String beanName;
 
-    FilteringApplicationListener(String beanName, Method method, Annotation ann, ApplicationContext applicationContext) {
+    DiscordEventApplicationListener(String beanName, Method method, Annotation ann, ApplicationContext applicationContext) {
         this.beanName = beanName;
         this.method = method;
         methodKey = generateKeyFromMethod(ann);
@@ -52,13 +53,15 @@ class FilteringApplicationListener implements GenericApplicationListener {
     public void onApplicationEvent(@NotNull ApplicationEvent event) {
         if (!(event instanceof DiscordEvent e)) return;
         if (!generateKeyFromEvent(e.getEvent()).equals(methodKey)) return;
+        Model model = new Model();
+        Object bean = applicationContext.getBean(beanName);
+        Object[] params = resolveParamsForControllerMethod(method, e.getEvent(), model);
         try {
-            Model model = new Model();
-            Object bean = applicationContext.getBean(beanName);
-            Object[] params = resolveParamsForControllerMethod(method, e.getEvent(), model);
             Object returned = method.invoke(bean, params);
-        } catch (Exception ex) {
-
+        } catch (InvocationTargetException ex) {
+            applicationContext.publishEvent(new DiscordExceptionEvent(bean, e.getEvent(), ex.getTargetException()));
+        } catch (IllegalAccessException ex){
+            log.error("Unable to call event method", ex);
         }
     }
 
