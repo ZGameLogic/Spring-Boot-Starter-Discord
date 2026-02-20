@@ -4,7 +4,6 @@ import com.zgamelogic.discord.annotations.EventProperty;
 import com.zgamelogic.discord.annotations.mappings.*;
 import com.zgamelogic.discord.data.DiscordEvent;
 import com.zgamelogic.discord.data.Model;
-import com.zgamelogic.discord.services.IronWood;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -36,7 +35,7 @@ import static com.zgamelogic.discord.helpers.Translator.eventOptionToObject;
 import static com.zgamelogic.discord.helpers.Translator.isClassValidToObject;
 
 class FilteringApplicationListener implements GenericApplicationListener {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(IronWood.class);
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(FilteringApplicationListener.class);
     private final ApplicationContext applicationContext;
     private final Method method;
     private final String methodKey;
@@ -59,7 +58,7 @@ class FilteringApplicationListener implements GenericApplicationListener {
             Object[] params = resolveParamsForControllerMethod(method, e.getEvent(), model);
             Object returned = method.invoke(bean, params);
         } catch (Exception ex) {
-            log.error("nope", ex);
+
         }
     }
 
@@ -170,7 +169,7 @@ class FilteringApplicationListener implements GenericApplicationListener {
 
     @Override
     public boolean supportsEventType(ResolvableType eventType) {
-        return true;
+        return DiscordEvent.class.isAssignableFrom(eventType.toClass());
     }
 
     private Object[] resolveParamsForControllerMethod(Method method, GenericEvent event, Model model){
