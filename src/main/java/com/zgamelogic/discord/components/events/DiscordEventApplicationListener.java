@@ -1,6 +1,5 @@
 package com.zgamelogic.discord.components.events;
 
-import com.zgamelogic.discord.annotations.EventProperty;
 import com.zgamelogic.discord.annotations.mappings.*;
 import com.zgamelogic.discord.data.DiscordEvent;
 import com.zgamelogic.discord.data.DiscordExceptionEvent;
@@ -25,15 +24,10 @@ import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.List;
 
-import static com.zgamelogic.discord.helpers.Translator.eventOptionToObject;
-import static com.zgamelogic.discord.helpers.Translator.isClassValidToObject;
+import static com.zgamelogic.discord.helpers.Mapper.resolveParamsForArray;
 
 class DiscordEventApplicationListener implements GenericApplicationListener {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordEventApplicationListener.class);
@@ -177,59 +171,5 @@ class DiscordEventApplicationListener implements GenericApplicationListener {
 
     private Object[] resolveParamsForControllerMethod(Method method, GenericEvent event, Model model){
         return resolveParamsForArray(event, null, model, method.getParameters());
-    }
-
-    private Object[] resolveParamsForArray(GenericEvent event, Throwable throwable, Model model, Parameter...parameters){
-        List<Object> params = new ArrayList<>();
-        if (parameters == null) return params.toArray();
-        for(Parameter parameter: parameters){
-            if (event != null && parameter.getType().isAssignableFrom(event.getClass())) {
-                params.add(event);
-                continue;
-            } else if (Event.class.isAssignableFrom(parameter.getType())){
-                params.add(null);
-                continue;
-            } else if (Model.class.isAssignableFrom(parameter.getType())){
-                params.add(model);
-                continue;
-            }
-            if (throwable != null && parameter.getType().isAssignableFrom(throwable.getClass())) { // if it's the throwable
-                params.add(throwable);
-                continue;
-            } else if(Throwable.class.isAssignableFrom(parameter.getType())){
-                params.add(null);
-                continue;
-            }
-            EventProperty eventProperty = parameter.getAnnotation(EventProperty.class);
-            String name = eventProperty != null && !eventProperty.name().isEmpty() ? eventProperty.name() : parameter.getName();
-            if(isClassValidToObject(parameter.getType())){ // event property
-                params.add(extractOptionFromEvent(event, name));
-            } else { // event record or event class
-                Class<?> clazz = parameter.getType();
-                if(clazz.getDeclaredConstructors().length == 0) continue;
-                Constructor<?> con = clazz.getDeclaredConstructors()[0];
-                con.setAccessible(true);
-                Object obj;
-                try {
-                    obj = con.newInstance(resolveParamsForArray(event, throwable, model, con.getParameters()));
-                } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException(e);
-                }
-                params.add(obj);
-            }
-        }
-        return params.toArray();
-    }
-
-    private Object extractOptionFromEvent(GenericEvent event, String name){
-        if (event instanceof SlashCommandInteractionEvent slashEvent) {
-            return eventOptionToObject(slashEvent.getOption(name));
-        } else if (event instanceof CommandAutoCompleteInteractionEvent autoCompleteEvent) {
-            return eventOptionToObject(autoCompleteEvent.getOption(name));
-        } else if (event instanceof ModalInteractionEvent modalEvent) {
-            if(modalEvent.getValue(name) == null) return null;
-            return modalEvent.getValue(name).getAsString();
-        }
-        return null;
     }
 }

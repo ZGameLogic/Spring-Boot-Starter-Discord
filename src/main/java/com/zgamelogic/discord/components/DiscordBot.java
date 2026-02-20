@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -41,28 +42,12 @@ public class DiscordBot implements SmartInitializingSingleton {
         log.debug("Bean JDABuilder present {}", beanBuilder != null);
         JDABuilder builder = beanBuilder == null ? JDABuilder.createDefault(properties.getToken()) : beanBuilder;
         if(beanBuilder == null) {
-            if(properties.getGatewayIntents() != null) {
-                for(String intent : properties.getGatewayIntents()) {
-                    Translator.stringToIntent(intent).ifPresentOrElse(i -> {
-                        log.debug("Enabled intent: {}", i.name());
-                        builder.enableIntents(i);
-                    }, () -> log.warn("Unable to decode {} gateway intent", intent));
-                }
-            }
-            if(properties.getCacheFlags() != null) {
-                for(String cacheFlag : properties.getCacheFlags()) {
-                    Translator.stringToCache(cacheFlag).ifPresentOrElse(e -> {
-                        log.debug("Enabled cache: {}", e.name());
-                        builder.enableCache(e);
-                    }, () -> log.warn("Unable to decode {} cache flag", cacheFlag));
-                }
-            }
-            if(properties.getMemberCachePolicy() != null) {
-                Translator.stringToMemberCachePolicy(properties.getMemberCachePolicy()).ifPresentOrElse(mcp -> {
-                    log.debug("Enabled member cache policy: {}", mcp);
-                    builder.setMemberCachePolicy(mcp);
-                }, () -> log.warn("Unable to decode {} member cache policy", properties.getMemberCachePolicy()));
-            }
+            if(properties.getGatewayIntents() != null)
+                builder.enableIntents(Arrays.asList(properties.getGatewayIntents()));
+            if(properties.getCacheFlags() != null)
+                builder.enableCache(Arrays.asList(properties.getCacheFlags()));
+            if(properties.getMemberCachePolicy() != null)
+                builder.setMemberCachePolicy(properties.getMemberCachePolicy());
             builder.setEventPassthrough(properties.isEventPassthrough());
         } else {
             log.debug("Skipping configuration from properties files since spring found a bean for JDABuilder.");
