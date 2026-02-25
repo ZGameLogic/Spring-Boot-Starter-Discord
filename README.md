@@ -4,9 +4,9 @@ Spring boot starter discord is a spring initializer that integrates [JDA](https:
 ## Compatability
 | Framework   | Version |
 |-------------|:-------:|
-| Java        |   v21   |
-| Spring-Boot | v3.5.0  |
-| JDA         | v6.3.1  |
+| Java        |   25    |
+| Spring-Boot | 3.5.11  |
+| JDA         |  6.3.1  |
 
 ## Setup
 1. Add this dependency to your pom.xml file
