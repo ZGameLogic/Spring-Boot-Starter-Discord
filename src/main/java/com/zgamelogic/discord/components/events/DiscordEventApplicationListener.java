@@ -107,61 +107,56 @@ class DiscordEventApplicationListener implements GenericApplicationListener {
     }
 
     private String generateKeyFromEvent(GenericEvent genericEvent) {
-        if (genericEvent instanceof CommandAutoCompleteInteractionEvent event) {
-            return String.format(
-                "%s:%s:%s:%s:%s",
-                genericEvent.getClass().getSimpleName(),
-                event.getName(),
-                event.getSubcommandName() != null ? event.getSubcommandName() : "",
-                event.getSubcommandGroup() != null ? event.getSubcommandGroup() : "",
-                event.getFocusedOption().getName()
+        return switch (genericEvent) {
+            case CommandAutoCompleteInteractionEvent event -> String.format(
+                    "%s:%s:%s:%s:%s",
+                    genericEvent.getClass().getSimpleName(),
+                    event.getName(),
+                    event.getSubcommandName() != null ? event.getSubcommandName() : "",
+                    event.getSubcommandGroup() != null ? event.getSubcommandGroup() : "",
+                    event.getFocusedOption().getName()
             );
-        } else if (genericEvent instanceof GenericCommandInteractionEvent event) {
-            return String.format(
-                "%s:%s:%s:%s:%s",
-                genericEvent.getClass().getSimpleName(),
-                event.getName(),
-                event.getSubcommandName() != null ? event.getSubcommandName() : "",
-                event.getSubcommandGroup() != null ? event.getSubcommandGroup() : "",
-                ""
+            case GenericCommandInteractionEvent event -> String.format(
+                    "%s:%s:%s:%s:%s",
+                    genericEvent.getClass().getSimpleName(),
+                    event.getName(),
+                    event.getSubcommandName() != null ? event.getSubcommandName() : "",
+                    event.getSubcommandGroup() != null ? event.getSubcommandGroup() : "",
+                    ""
             );
-        } else if (genericEvent instanceof ModalInteractionEvent event) {
-            return String.format(
-                "%s:%s:%s:%s:%s",
-                genericEvent.getClass().getSimpleName(),
-                event.getModalId(),
-                "",
-                "",
-                ""
+            case ModalInteractionEvent event -> String.format(
+                    "%s:%s:%s:%s:%s",
+                    genericEvent.getClass().getSimpleName(),
+                    event.getModalId(),
+                    "",
+                    "",
+                    ""
             );
-        } else if (genericEvent instanceof ButtonInteractionEvent event) {
-            return String.format(
-                "%s:%s:%s:%s:%s",
-                genericEvent.getClass().getSimpleName(),
-                event.getButton().getCustomId(),
-                "",
-                "",
-                ""
+            case ButtonInteractionEvent event -> String.format(
+                    "%s:%s:%s:%s:%s",
+                    genericEvent.getClass().getSimpleName(),
+                    event.getButton().getCustomId(),
+                    "",
+                    "",
+                    ""
             );
-        } else if (genericEvent instanceof GenericSelectMenuInteractionEvent<?, ?> event) {
-            return String.format(
-                "%s:%s:%s:%s:%s",
-                genericEvent.getClass().getSimpleName(),
-                event.getSelectMenu().getCustomId(),
-                "",
-                "",
-                ""
+            case GenericSelectMenuInteractionEvent<?, ?> event -> String.format(
+                    "%s:%s:%s:%s:%s",
+                    genericEvent.getClass().getSimpleName(),
+                    event.getSelectMenu().getCustomId(),
+                    "",
+                    "",
+                    ""
             );
-        } else {
-            return String.format(
-                "%s:%s:%s:%s:%s",
-                genericEvent.getClass().getSimpleName(),
-                "",
-                "",
-                "",
-                ""
+            default -> String.format(
+                    "%s:%s:%s:%s:%s",
+                    genericEvent.getClass().getSimpleName(),
+                    "",
+                    "",
+                    "",
+                    ""
             );
-        }
+        };
     }
 
     @Override
