@@ -1,9 +1,8 @@
 package com.zgamelogic.discord.components.events;
 
 import com.zgamelogic.discord.annotations.mappings.*;
-import com.zgamelogic.discord.data.DiscordEvent;
-import com.zgamelogic.discord.data.DiscordExceptionEvent;
-import com.zgamelogic.discord.data.Model;
+import com.zgamelogic.discord.components.exceptions.DiscordExceptionEvent;
+import com.zgamelogic.discord.services.ironwood.Model;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;

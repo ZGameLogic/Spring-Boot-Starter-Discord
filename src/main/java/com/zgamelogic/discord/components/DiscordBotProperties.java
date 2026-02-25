@@ -19,33 +19,30 @@ public class DiscordBotProperties {
     private final String token;
     /**
      * Gateway intents for the bot
-     *
      * @see net.dv8tion.jda.api.requests.GatewayIntent
      */
     private final GatewayIntent[] gatewayIntents;
     /**
      * Cache flags for the bot
-     *
      * @see net.dv8tion.jda.api.utils.cache.CacheFlag
      */
     private final CacheFlag[] cacheFlags;
     /**
      * Member cache policy for the bot
-     *
      * @see net.dv8tion.jda.api.utils.MemberCachePolicy
      */
     private final MemberCachePolicy memberCachePolicy;
     /**
-     * event pass through for the bot
+     * Event pass through for the bot
      */
     private final boolean eventPassthrough;
 
     /**
-     * @param token
-     * @param gatewayIntents
-     * @param cacheFlags
-     * @param memberCachePolicy
-     * @param eventPassthrough
+     * @param token Token for the bot
+     * @param gatewayIntents Gateway intents for the bot
+     * @param cacheFlags Cache flags for the bot
+     * @param memberCachePolicy Member cache policy for the bot
+     * @param eventPassthrough Event pass through for the bot
      */
     public DiscordBotProperties(String token, GatewayIntent[] gatewayIntents, CacheFlag[] cacheFlags, MemberCachePolicy memberCachePolicy, boolean eventPassthrough) {
         this.token = token;

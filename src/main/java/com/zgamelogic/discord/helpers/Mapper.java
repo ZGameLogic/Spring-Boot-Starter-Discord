@@ -1,21 +1,24 @@
 package com.zgamelogic.discord.helpers;
 
 import com.zgamelogic.discord.annotations.EventProperty;
-import com.zgamelogic.discord.data.Model;
+import com.zgamelogic.discord.services.ironwood.Model;
+import net.dv8tion.jda.api.entities.IMentionable;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.zgamelogic.discord.helpers.Translator.eventOptionToObject;
-import static com.zgamelogic.discord.helpers.Translator.isClassValidToObject;
 
 public abstract class Mapper {
     public static Object[] resolveParamsForArray(GenericEvent event, Throwable throwable, Model model, Parameter... parameters){
@@ -70,5 +73,35 @@ public abstract class Mapper {
             return modalEvent.getValue(name).getAsString();
         }
         return null;
+    }
+
+    private static boolean isClassValidToObject(Class<?> clazz){
+        return List.of(
+                String.class,
+                Integer.class,
+                int.class,
+                Boolean.class,
+                boolean.class,
+                User.class,
+                Channel.class,
+                Role.class,
+                IMentionable.class,
+                Message.Attachment.class
+        ).contains(clazz);
+    }
+
+    private static Object eventOptionToObject(OptionMapping mapping){
+        if(mapping == null) return null;
+        return switch(mapping.getType()){
+            case STRING -> mapping.getAsString();
+            case INTEGER -> mapping.getAsInt();
+            case BOOLEAN -> mapping.getAsBoolean();
+            case USER -> mapping.getAsUser();
+            case CHANNEL -> mapping.getAsChannel();
+            case ROLE -> mapping.getAsRole();
+            case MENTIONABLE -> mapping.getAsMentionable();
+            case ATTACHMENT -> mapping.getAsAttachment();
+            default -> null;
+        };
     }
 }

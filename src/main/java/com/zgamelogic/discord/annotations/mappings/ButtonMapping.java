@@ -1,6 +1,6 @@
 package com.zgamelogic.discord.annotations.mappings;
 
-import com.zgamelogic.discord.data.DiscordEvent;
+import com.zgamelogic.discord.components.events.DiscordEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AliasFor;
 

@@ -1,8 +1,7 @@
 package com.zgamelogic.discord.components.exceptions;
 
 import com.zgamelogic.discord.annotations.DiscordExceptionHandler;
-import com.zgamelogic.discord.data.DiscordExceptionEvent;
-import com.zgamelogic.discord.data.Model;
+import com.zgamelogic.discord.services.ironwood.Model;
 import net.dv8tion.jda.api.events.GenericEvent;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

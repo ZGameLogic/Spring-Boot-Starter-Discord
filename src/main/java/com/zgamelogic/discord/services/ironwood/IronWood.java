@@ -1,6 +1,5 @@
-package com.zgamelogic.discord.services;
+package com.zgamelogic.discord.services.ironwood;
 
-import com.zgamelogic.discord.data.Model;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.Component;
 import net.dv8tion.jda.api.components.label.Label;
