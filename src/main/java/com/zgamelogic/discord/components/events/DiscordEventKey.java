@@ -29,14 +29,14 @@ public class DiscordEventKey {
         switch (genericEvent) {
             case CommandAutoCompleteInteractionEvent event -> {
                 id = event.getName();
-                subId = event.getSubcommandName() != null ? event.getSubcommandName() : "";
-                groupName = event.getSubcommandGroup() != null ? event.getSubcommandGroup() : "";
+                subId = event.getSubcommandName() != null ? event.getSubcommandName() : null;
+                groupName = event.getSubcommandGroup() != null ? event.getSubcommandGroup() : null;
                 focusedOption = event.getFocusedOption().getName();
             }
             case GenericCommandInteractionEvent event -> {
                 id = event.getName();
-                subId = event.getSubcommandName() != null ? event.getSubcommandName() : "";
-                groupName = event.getSubcommandGroup() != null ? event.getSubcommandGroup() : "";
+                subId = event.getSubcommandName() != null ? event.getSubcommandName() : null;
+                groupName = event.getSubcommandGroup() != null ? event.getSubcommandGroup() : null;
                 focusedOption = null;
             }
             case ModalInteractionEvent event -> {
@@ -70,49 +70,49 @@ public class DiscordEventKey {
         switch (mapping) {
             case SlashCommandMapping slashCommandMapping -> {
                 clazz = SlashCommandInteractionEvent.class;
-                id = AnnotatedElementUtils.findMergedAnnotation(method, SlashCommandMapping.class).id();
-                subId = slashCommandMapping.sub();
-                groupName = slashCommandMapping.group();
+                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, SlashCommandMapping.class).id());
+                subId = valueOrNull(slashCommandMapping.sub());
+                groupName = valueOrNull(slashCommandMapping.group());
                 focusedOption = null;
             }
             case SlashCommandAutocompleteMapping slashCommandMapping -> {
                 clazz = CommandAutoCompleteInteractionEvent.class;
-                id = AnnotatedElementUtils.findMergedAnnotation(method, SlashCommandAutocompleteMapping.class).id();
-                subId = slashCommandMapping.sub();
-                groupName = slashCommandMapping.group();
-                focusedOption = slashCommandMapping.focused();
+                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, SlashCommandAutocompleteMapping.class).id());
+                subId = valueOrNull(slashCommandMapping.sub());
+                groupName = valueOrNull(slashCommandMapping.group());
+                focusedOption = valueOrNull(slashCommandMapping.focused());
             }
             case MessageContextMapping _ -> {
                 clazz = MessageContextInteractionEvent.class;
-                id = AnnotatedElementUtils.findMergedAnnotation(method, MessageContextMapping.class).id();
+                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, MessageContextMapping.class).id());
                 subId = null;
                 groupName = null;
                 focusedOption = null;
             }
             case ButtonMapping _ -> {
                 clazz = ButtonInteractionEvent.class;
-                id = AnnotatedElementUtils.findMergedAnnotation(method, ButtonMapping.class).id();
+                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, ButtonMapping.class).id());
                 subId = null;
                 groupName = null;
                 focusedOption = null;
             }
             case StringSelectMapping _ -> {
                 clazz = StringSelectInteractionEvent.class;
-                id = AnnotatedElementUtils.findMergedAnnotation(method, StringSelectMapping.class).id();
+                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, StringSelectMapping.class).id());
                 subId = null;
                 groupName = null;
                 focusedOption = null;
             }
             case EntitySelectMapping _ -> {
                 clazz = EntitySelectInteractionEvent.class;
-                id = AnnotatedElementUtils.findMergedAnnotation(method, EntitySelectMapping.class).id();
+                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, EntitySelectMapping.class).id());
                 subId = null;
                 groupName = null;
                 focusedOption = null;
             }
             case ModalMapping _ -> {
                 clazz = ModalInteractionEvent.class;
-                id = AnnotatedElementUtils.findMergedAnnotation(method, ModalMapping.class).id();
+                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, ModalMapping.class).id());
                 subId = null;
                 groupName = null;
                 focusedOption = null;
@@ -127,6 +127,10 @@ public class DiscordEventKey {
             default ->
                     throw new IllegalArgumentException("Unsupported mapping type: " + mapping.annotationType().getName());
         }
+    }
+
+    private String valueOrNull(String value){
+        return value.isEmpty() ? null : value;
     }
 
     @Override
