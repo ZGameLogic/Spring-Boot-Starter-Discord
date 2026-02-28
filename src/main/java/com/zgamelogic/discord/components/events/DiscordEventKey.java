@@ -82,35 +82,35 @@ public class DiscordEventKey {
                 groupName = slashCommandMapping.group();
                 focusedOption = slashCommandMapping.focused();
             }
-            case MessageContextMapping messageContextMapping -> {
+            case MessageContextMapping _ -> {
                 clazz = MessageContextInteractionEvent.class;
                 id = AnnotatedElementUtils.findMergedAnnotation(method, MessageContextMapping.class).id();
                 subId = null;
                 groupName = null;
                 focusedOption = null;
             }
-            case ButtonMapping buttonMapping -> {
+            case ButtonMapping _ -> {
                 clazz = ButtonInteractionEvent.class;
                 id = AnnotatedElementUtils.findMergedAnnotation(method, ButtonMapping.class).id();
                 subId = null;
                 groupName = null;
                 focusedOption = null;
             }
-            case StringSelectMapping stringSelectMapping -> {
+            case StringSelectMapping _ -> {
                 clazz = StringSelectInteractionEvent.class;
                 id = AnnotatedElementUtils.findMergedAnnotation(method, StringSelectMapping.class).id();
                 subId = null;
                 groupName = null;
                 focusedOption = null;
             }
-            case EntitySelectMapping entitySelectMapping -> {
+            case EntitySelectMapping _ -> {
                 clazz = EntitySelectInteractionEvent.class;
                 id = AnnotatedElementUtils.findMergedAnnotation(method, EntitySelectMapping.class).id();
                 subId = null;
                 groupName = null;
                 focusedOption = null;
             }
-            case ModalMapping modalMapping -> {
+            case ModalMapping _ -> {
                 clazz = ModalInteractionEvent.class;
                 id = AnnotatedElementUtils.findMergedAnnotation(method, ModalMapping.class).id();
                 subId = null;
@@ -129,13 +129,14 @@ public class DiscordEventKey {
         }
     }
 
-
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof DiscordEventKey otherEvent){
-
-        }
-
-        return false;
+        if(!(obj instanceof DiscordEventKey otherEvent)) return false;
+        return
+            otherEvent.clazz.isAssignableFrom(clazz) &&
+            (id == null || id.equals(otherEvent.id)) &&
+            (subId == null || subId.equals(otherEvent.subId)) &&
+            (groupName == null || groupName.equals(otherEvent.groupName)) &&
+            (focusedOption == null || focusedOption.equals(otherEvent.focusedOption));
     }
 }
