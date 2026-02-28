@@ -28,7 +28,7 @@ public class DiscordEventListenerFactory implements EventListenerFactory, Applic
         StringSelectMapping.class,
         EntitySelectMapping.class,
         ModalMapping.class,
-        GenericCommandMapping.class
+        GenericDiscordMapping.class
     );
 
     @Override

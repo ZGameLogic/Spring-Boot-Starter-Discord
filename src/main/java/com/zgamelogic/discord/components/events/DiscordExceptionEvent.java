@@ -1,4 +1,4 @@
-package com.zgamelogic.discord.components.exceptions;
+package com.zgamelogic.discord.components.events;
 
 import net.dv8tion.jda.api.events.GenericEvent;
 import org.springframework.context.ApplicationEvent;

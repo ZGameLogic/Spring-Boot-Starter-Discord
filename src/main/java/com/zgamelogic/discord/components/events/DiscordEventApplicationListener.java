@@ -1,7 +1,6 @@
 package com.zgamelogic.discord.components.events;
 
 import com.zgamelogic.discord.annotations.mappings.*;
-import com.zgamelogic.discord.components.exceptions.DiscordExceptionEvent;
 import com.zgamelogic.discord.services.ironwood.Model;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -91,8 +90,12 @@ class DiscordEventApplicationListener implements GenericApplicationListener {
         } else if (mapping instanceof ModalMapping) {
             clazz = ModalInteractionEvent.class;
             id = AnnotatedElementUtils.findMergedAnnotation(method, ModalMapping.class).id();
-        } else if (mapping instanceof GenericCommandMapping discordMapping){
+        } else if (mapping instanceof GenericDiscordMapping discordMapping){
             clazz = discordMapping.event() == Event.class ? null : discordMapping.event();
+            id = "*";
+            subId = "*";
+            groupName = "*";
+            focusedOption = "*";
         }
 
         return String.format(

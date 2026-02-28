@@ -1,7 +1,6 @@
-package com.zgamelogic.discord.components.exceptions;
+package com.zgamelogic.discord.components.events;
 
 import com.zgamelogic.discord.annotations.DiscordExceptionHandler;
-import com.zgamelogic.discord.annotations.mappings.*;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;

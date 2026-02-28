@@ -1,4 +1,4 @@
-package com.zgamelogic.discord.components.exceptions;
+package com.zgamelogic.discord.components.events;
 
 import com.zgamelogic.discord.annotations.DiscordExceptionHandler;
 import com.zgamelogic.discord.services.ironwood.Model;

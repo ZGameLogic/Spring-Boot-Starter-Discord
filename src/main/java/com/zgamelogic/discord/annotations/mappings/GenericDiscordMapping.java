@@ -12,6 +12,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @EventListener(value = DiscordEvent.class)
-public @interface GenericCommandMapping {
+public @interface GenericDiscordMapping {
     Class<? extends Event> event();
 }
