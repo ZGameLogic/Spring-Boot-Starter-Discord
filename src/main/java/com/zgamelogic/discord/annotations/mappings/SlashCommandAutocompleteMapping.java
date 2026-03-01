@@ -20,5 +20,4 @@ public @interface SlashCommandAutocompleteMapping {
     String group() default "";
     String sub() default "";
     String focused() default "";
-    String document() default "";
 }

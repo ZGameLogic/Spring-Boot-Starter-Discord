@@ -3,12 +3,7 @@ package com.zgamelogic.discord.components.events;
 import com.zgamelogic.discord.annotations.mappings.*;
 import com.zgamelogic.discord.services.ironwood.IronWood;
 import com.zgamelogic.discord.services.ironwood.Model;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
-import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
-import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.data.SerializableData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -62,7 +57,6 @@ class DiscordEventApplicationListener implements GenericApplicationListener {
                             Method document = ann.getClass().getDeclaredMethod("document");
                             return (String) document.invoke(ann);
                         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
-                            log.error("", ignored);
                             return "";
                         }
                     })
@@ -72,17 +66,9 @@ class DiscordEventApplicationListener implements GenericApplicationListener {
             }
             if(documentName == null) return;
             SerializableData message = ironWood.generate(documentName, model);
-            if(((Interaction) e.getEvent()).isAcknowledged()){
-                if (message instanceof MessageEmbed) {
-                    ((GenericInteractionCreateEvent) e.getEvent()).getHook().sendMessageEmbeds((MessageEmbed) message).addFiles(model.getFileUploads()).addComponents(model.getActionRows()).queue();
-                }
-            } else {
-                if (message instanceof Modal) {
-                    ((GenericInteractionCreateEvent) e.getEvent()).replyModal(ironWood.generate(documentName, model)).queue();
-                } else if (message instanceof MessageEmbed) {
-                    ((GenericInteractionCreateEvent) e.getEvent()).replyEmbeds((MessageEmbed) message).addFiles(model.getFileUploads()).addComponents(model.getActionRows()).queue();
-                }
-            }
+            /*
+            TODO reply to event, and make sure if its acknowledged or not
+             */
         } catch (InvocationTargetException ex) {
             applicationContext.publishEvent(new DiscordExceptionEvent(bean, e.getEvent(), ex.getTargetException()));
         } catch (IllegalAccessException ex){
