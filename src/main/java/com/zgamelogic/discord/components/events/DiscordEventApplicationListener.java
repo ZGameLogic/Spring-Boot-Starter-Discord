@@ -3,7 +3,11 @@ package com.zgamelogic.discord.components.events;
 import com.zgamelogic.discord.annotations.mappings.*;
 import com.zgamelogic.discord.services.ironwood.IronWood;
 import com.zgamelogic.discord.services.ironwood.Model;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.utils.data.SerializableData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -66,9 +70,24 @@ class DiscordEventApplicationListener implements GenericApplicationListener {
             }
             if(documentName == null) return;
             SerializableData message = ironWood.generate(documentName, model);
+            boolean acknowledged = ((Interaction) e.getEvent()).isAcknowledged();
+            /*
+            if true, can only send an embed, component, message or poll
+            if false, can send embed, component, message, poll or modal
+             */
+//            switch(message){
+//                case MessageEmbed embed -> {
+//                    if(acknowledged){
+//                        e.getEvent().getHook().sendMessageEmbeds(embed).queue();
+//                    } else {
+//                        ((Interaction) e.getEvent()).replyEmbeds(embed).queue();
+//                    }
+//                }
+//            }
             /*
             TODO reply to event, and make sure if its acknowledged or not
              */
+
         } catch (InvocationTargetException ex) {
             applicationContext.publishEvent(new DiscordExceptionEvent(bean, e.getEvent(), ex.getTargetException()));
         } catch (IllegalAccessException ex){
