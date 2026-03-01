@@ -10,6 +10,8 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.core.ResolvableType;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -39,6 +41,17 @@ class DiscordExceptionApplicationListener implements GenericApplicationListener 
             Object bean = applicationContext.getBean(beanName);
             Object[] params = resolveParamsForExceptionMethod(method, e.getEvent(), model, e.getException());
             Object returned = method.invoke(bean, params);
+            String documentName = null;
+            if(returned instanceof String returnedDocument){
+                documentName = returnedDocument;
+            } else {
+                // TODO search the annotations for the document name. Better yet, do that in the constructor and store it as a field
+                for(Annotation ann = method.getAnnotations()){
+                    Field document = ann.getClass().getDeclaredField("document");
+                }
+            }
+            if(documentName == null) return;
+            // TODO create document with model
         } catch (Exception ex) {
             log.error("Unable to call exception method", ex);
         }

@@ -17,4 +17,5 @@ public @interface EntitySelectMapping {
     String value() default "";
     @AliasFor("value")
     String id() default "";
+    String document() default "";
 }

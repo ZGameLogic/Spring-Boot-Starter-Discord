@@ -16,4 +16,5 @@ import java.lang.annotation.Target;
 @EventListener(value = DiscordEvent.class)
 public @interface DiscordExceptionHandler {
     Class<? extends Throwable>[] value();
+    String document() default "";
 }

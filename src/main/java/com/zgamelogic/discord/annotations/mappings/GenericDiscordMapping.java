@@ -14,4 +14,5 @@ import java.lang.annotation.Target;
 @EventListener(value = DiscordEvent.class)
 public @interface GenericDiscordMapping {
     Class<? extends Event> event();
+    String document() default "";
 }

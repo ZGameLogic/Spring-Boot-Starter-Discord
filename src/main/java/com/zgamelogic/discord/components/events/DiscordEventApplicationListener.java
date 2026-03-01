@@ -11,6 +11,7 @@ import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.core.ResolvableType;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -39,6 +40,17 @@ class DiscordEventApplicationListener implements GenericApplicationListener {
         Object[] params = resolveParamsForControllerMethod(method, e.getEvent(), model);
         try {
             Object returned = method.invoke(bean, params);
+            String documentName = null;
+            if(returned instanceof String returnedDocument){
+                documentName = returnedDocument;
+            } else {
+                // TODO search the annotations for the document name. Better yet, do that in the constructor and store it as a field
+                for(Annotation ann = method.getAnnotations()){
+                    Field document = ann.getClass().getDeclaredField("document");
+                }
+            }
+            if(documentName == null) return;
+            // TODO create document with model
         } catch (InvocationTargetException ex) {
             applicationContext.publishEvent(new DiscordExceptionEvent(bean, e.getEvent(), ex.getTargetException()));
         } catch (IllegalAccessException ex){

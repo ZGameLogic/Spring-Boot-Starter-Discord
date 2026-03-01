@@ -17,4 +17,5 @@ public @interface MessageContextMapping {
     String value() default "";
     @AliasFor("value")
     String id() default "";
+    String document() default "";
 }

@@ -19,4 +19,5 @@ public @interface SlashCommandMapping {
     String id() default "";
     String group() default "";
     String sub() default "";
+    String document() default "";
 }
