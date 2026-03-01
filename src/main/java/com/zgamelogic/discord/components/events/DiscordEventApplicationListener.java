@@ -74,7 +74,10 @@ class DiscordEventApplicationListener implements GenericApplicationListener {
             /*
             if true, can only send an embed, component, message or poll
             if false, can send embed, component, message, poll or modal
+            IReplyCallback has the methods reply, deferReply, editOriginal, deleteOriginal, followupMessage, hook, and sendMessage. Only reply and deferReply can be used if not acknowledged. If acknowledged, can use all methods except reply and deferReply
              */
+//            ((IReplyCallback) e.getEvent()).getHook().
+//            ((IReplyCallback) e.getEvent())
 //            switch(message){
 //                case MessageEmbed embed -> {
 //                    if(acknowledged){
