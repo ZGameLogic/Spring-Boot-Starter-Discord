@@ -1,19 +1,29 @@
 package com.zgamelogic.discord.components.events;
 
 import com.zgamelogic.discord.annotations.mappings.*;
+import com.zgamelogic.discord.services.ironwood.IronWood;
 import com.zgamelogic.discord.services.ironwood.Model;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
+import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.modals.Modal;
+import net.dv8tion.jda.api.utils.data.SerializableData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.core.ResolvableType;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 import static com.zgamelogic.discord.helpers.Mapper.resolveParamsForArray;
 
@@ -23,10 +33,12 @@ class DiscordEventApplicationListener implements GenericApplicationListener {
     private final Method method;
     private final DiscordEventKey methodKey;
     private final String beanName;
+    private final IronWood ironWood;
 
     DiscordEventApplicationListener(String beanName, Method method, Annotation ann, ApplicationContext applicationContext) {
         this.beanName = beanName;
         this.method = method;
+        this.ironWood = applicationContext.getBean(IronWood.class);
         methodKey = new DiscordEventKey(ann, method);
         this.applicationContext = applicationContext;
     }
@@ -40,21 +52,43 @@ class DiscordEventApplicationListener implements GenericApplicationListener {
         Object[] params = resolveParamsForControllerMethod(method, e.getEvent(), model);
         try {
             Object returned = method.invoke(bean, params);
-            String documentName = null;
+            String documentName;
             if(returned instanceof String returnedDocument){
                 documentName = returnedDocument;
             } else {
-                // TODO search the annotations for the document name. Better yet, do that in the constructor and store it as a field
-                for(Annotation ann = method.getAnnotations()){
-                    Field document = ann.getClass().getDeclaredField("document");
-                }
+                documentName = Arrays.stream(method.getAnnotations())
+                    .map(ann -> {
+                        try {
+                            Method document = ann.getClass().getDeclaredMethod("document");
+                            return (String) document.invoke(ann);
+                        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+                            log.error("", ignored);
+                            return "";
+                        }
+                    })
+                    .filter(doc -> !doc.isEmpty())
+                    .findFirst()
+                    .orElse(null);
             }
             if(documentName == null) return;
-            // TODO create document with model
+            SerializableData message = ironWood.generate(documentName, model);
+            if(((Interaction) e.getEvent()).isAcknowledged()){
+                if (message instanceof MessageEmbed) {
+                    ((GenericInteractionCreateEvent) e.getEvent()).getHook().sendMessageEmbeds((MessageEmbed) message).addFiles(model.getFileUploads()).addComponents(model.getActionRows()).queue();
+                }
+            } else {
+                if (message instanceof Modal) {
+                    ((GenericInteractionCreateEvent) e.getEvent()).replyModal(ironWood.generate(documentName, model)).queue();
+                } else if (message instanceof MessageEmbed) {
+                    ((GenericInteractionCreateEvent) e.getEvent()).replyEmbeds((MessageEmbed) message).addFiles(model.getFileUploads()).addComponents(model.getActionRows()).queue();
+                }
+            }
         } catch (InvocationTargetException ex) {
             applicationContext.publishEvent(new DiscordExceptionEvent(bean, e.getEvent(), ex.getTargetException()));
         } catch (IllegalAccessException ex){
             log.error("Unable to call event method", ex);
+        } catch (ParserConfigurationException | IOException | NoSuchFieldException | SAXException ex) {
+            throw new RuntimeException(ex);
         }
     }
 
