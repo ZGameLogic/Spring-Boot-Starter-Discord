@@ -3,11 +3,8 @@ package com.zgamelogic.discord.components.events;
 import com.zgamelogic.discord.annotations.mappings.*;
 import com.zgamelogic.discord.services.ironwood.IronWood;
 import com.zgamelogic.discord.services.ironwood.Model;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
-import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
-import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.utils.data.SerializableData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -92,7 +89,7 @@ class DiscordEventApplicationListener implements GenericApplicationListener {
              */
 
         } catch (InvocationTargetException ex) {
-            applicationContext.publishEvent(new DiscordExceptionEvent(bean, e.getEvent(), ex.getTargetException()));
+            applicationContext.publishEvent(new DiscordExceptionEvent(bean, e.getEvent(), e.getKey(), ex.getTargetException()));
         } catch (IllegalAccessException ex){
             log.error("Unable to call event method", ex);
         } catch (ParserConfigurationException | IOException | NoSuchFieldException | SAXException ex) {

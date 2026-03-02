@@ -1,7 +1,7 @@
 package com.zgamelogic.discord.components.events;
 
+import com.zgamelogic.discord.annotations.DiscordExceptionHandler;
 import com.zgamelogic.discord.annotations.mappings.*;
-import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
@@ -118,11 +118,18 @@ public class DiscordEventKey {
                 focusedOption = null;
             }
             case GenericDiscordMapping discordMapping -> {
-                clazz = discordMapping.event() == Event.class ? null : discordMapping.event();
+                clazz = discordMapping.event();
                 id = null;
                 subId = null;
                 groupName = null;
                 focusedOption = null;
+            }
+            case DiscordExceptionHandler exceptionHandler -> {
+                clazz = exceptionHandler.event();
+                id = valueOrNull(exceptionHandler.id());
+                subId = valueOrNull(exceptionHandler.sub());
+                groupName = valueOrNull(exceptionHandler.group());
+                focusedOption = valueOrNull(exceptionHandler.focused());
             }
             default ->
                     throw new IllegalArgumentException("Unsupported mapping type: " + mapping.annotationType().getName());
@@ -137,7 +144,7 @@ public class DiscordEventKey {
     public boolean equals(Object obj) {
         if(!(obj instanceof DiscordEventKey otherEvent)) return false;
         return
-            otherEvent.clazz.isAssignableFrom(clazz) &&
+            (clazz == null || otherEvent.clazz.isAssignableFrom(clazz)) &&
             (id == null || id.equals(otherEvent.id)) &&
             (subId == null || subId.equals(otherEvent.subId)) &&
             (groupName == null || groupName.equals(otherEvent.groupName)) &&

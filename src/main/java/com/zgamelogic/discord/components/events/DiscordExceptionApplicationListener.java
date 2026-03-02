@@ -23,12 +23,14 @@ class DiscordExceptionApplicationListener implements GenericApplicationListener 
     private final Method method;
     private final String beanName;
     private final List<Class<? extends Throwable>> supportedExceptions;
+    private final DiscordEventKey methodKey;
 
     DiscordExceptionApplicationListener(String beanName, Method method, DiscordExceptionHandler ann, ApplicationContext applicationContext) {
         this.beanName = beanName;
         this.method = method;
         this.applicationContext = applicationContext;
         supportedExceptions = List.of(ann.value());
+        methodKey = new DiscordEventKey(ann, method);
     }
 
     @Override
@@ -36,6 +38,7 @@ class DiscordExceptionApplicationListener implements GenericApplicationListener 
         if (!(event instanceof DiscordExceptionEvent e)) return;
         if(e.getSource().getClass() != method.getDeclaringClass()) return;
         if(!supportedExceptions.contains(e.getException().getClass())) return;
+        if(!methodKey.equals(e.getKey())) return;
         try {
             Model model = new Model();
             Object bean = applicationContext.getBean(beanName);
