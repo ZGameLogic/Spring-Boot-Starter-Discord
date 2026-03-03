@@ -1,7 +1,5 @@
-package com.zgamelogic.discord.services;
+package com.zgamelogic.discord.services.ironwood;
 
-import com.zgamelogic.discord.data.Model;
-import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.Component;
 import net.dv8tion.jda.api.components.label.Label;
@@ -10,6 +8,8 @@ import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.data.SerializableData;
+import net.dv8tion.jda.api.utils.messages.MessagePollData;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
@@ -27,9 +27,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Slf4j
 @Service
 public class IronWood {
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(IronWood.class);
     private final Map<String, String> documents;
 
     public IronWood(@Value("${ironwood.directory:ironwood}") String directory, ResourcePatternResolver resourcePatternResolver) throws IOException {
@@ -49,9 +49,10 @@ public class IronWood {
         doc.getDocumentElement().normalize();
         Element root = doc.getDocumentElement();
         return switch (root.getTagName()) {
-            case "embed" -> (T) generateEmbed(root, model);
-            case "component" -> (T) generateComponent(root, model);
-            case "modal" -> (T) generateModal(root, model);
+            case "embed" -> (T) generateEmbed(root);
+            case "component" -> (T) generateComponent(root);
+            case "modal" -> (T) generateModal(root);
+            case "poll" -> (T) generatePoll(root);
             default -> {
                 log.warn("Unknown IronWood document type: {}", root.getTagName());
                 yield null;
@@ -59,7 +60,7 @@ public class IronWood {
         };
     }
 
-    private MessageEmbed generateEmbed(Element root, Model model) {
+    private MessageEmbed generateEmbed(Element root) {
         EmbedBuilder eb = new EmbedBuilder();
         String colorString = root.getAttribute("color");
         if(!colorString.isEmpty())
@@ -122,9 +123,10 @@ public class IronWood {
         return eb.build();
     }
 
-    public Component generateComponent(Element root, Model model) { return null; }
+    public Component generateComponent(Element root) { return null; }
+    private MessagePollData generatePoll(Element root) { return null; }
 
-    public Modal generateModal(Element root, Model model) {
+    public Modal generateModal(Element root) {
         String id = root.getAttribute("id");
         String title = root.getAttribute("title");
         Modal.Builder modal = Modal.create(id, title);

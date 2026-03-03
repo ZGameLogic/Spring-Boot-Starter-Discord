@@ -1,4 +1,5 @@
 com.zgamelogic.discord.components.DiscordBot
 com.zgamelogic.discord.components.DiscordListener
-com.zgamelogic.discord.components.DiscordDispatcher
-com.zgamelogic.discord.services.IronWood
+com.zgamelogic.discord.components.events.DiscordEventListenerFactory
+com.zgamelogic.discord.components.events.DiscordExceptionListenerFactory
+com.zgamelogic.discord.services.ironwood.IronWood

@@ -1,6 +1,5 @@
-package com.zgamelogic.discord.data;
+package com.zgamelogic.discord.services.ironwood;
 
-import lombok.Getter;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.utils.FileUpload;
 
@@ -12,9 +11,7 @@ import java.util.regex.Pattern;
 public class Model {
     private final Map<String, Object> data;
 
-    @Getter
     private final List<FileUpload> fileUploads;
-    @Getter
     private final List<ActionRow> actionRows;
 
     public Model() {
@@ -77,5 +74,13 @@ public class Model {
             return new ArrayList<>();
         }
         return value instanceof Collection<?> ? (Collection<?>) value : new ArrayList<>();
+    }
+
+    public List<FileUpload> getFileUploads() {
+        return fileUploads;
+    }
+
+    public List<ActionRow> getActionRows() {
+        return actionRows;
     }
 }

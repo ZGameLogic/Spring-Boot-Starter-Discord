@@ -10,12 +10,12 @@
     "description": "Discord Bot token."
   },{
     "name": "discord.gateway-intents",
-    "type": "java.lang.String[]",
+    "type": "net.dv8tion.jda.api.requests.GatewayIntent[]",
     "description": "Intents for gateways for the discord bot.",
     "defaultValue": []
   },{
     "name": "discord.cache-flags",
-    "type": "java.lang.String[]",
+    "type": "net.dv8tion.jda.api.utils.cache.CacheFlag[]",
     "description": "Discord bot cache policy.",
     "defaultValue": []
   },{
