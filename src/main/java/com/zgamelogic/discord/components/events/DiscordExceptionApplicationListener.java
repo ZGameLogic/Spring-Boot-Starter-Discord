@@ -10,8 +10,6 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.core.ResolvableType;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 

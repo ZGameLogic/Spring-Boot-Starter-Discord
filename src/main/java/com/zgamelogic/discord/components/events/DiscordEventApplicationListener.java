@@ -4,22 +4,15 @@ import com.zgamelogic.discord.annotations.mappings.*;
 import com.zgamelogic.discord.services.ironwood.IronWood;
 import com.zgamelogic.discord.services.ironwood.Model;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
-import net.dv8tion.jda.api.utils.data.SerializableData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.core.ResolvableType;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
 import static com.zgamelogic.discord.helpers.Mapper.resolveParamsForArray;
 
@@ -48,52 +41,10 @@ class DiscordEventApplicationListener implements GenericApplicationListener {
         Object[] params = resolveParamsForControllerMethod(method, e.getEvent(), model);
         try {
             Object returned = method.invoke(bean, params);
-            String documentName;
-            if(returned instanceof String returnedDocument){
-                documentName = returnedDocument;
-            } else {
-                documentName = Arrays.stream(method.getAnnotations())
-                    .map(ann -> {
-                        try {
-                            Method document = ann.getClass().getDeclaredMethod("document");
-                            return (String) document.invoke(ann);
-                        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
-                            return "";
-                        }
-                    })
-                    .filter(doc -> !doc.isEmpty())
-                    .findFirst()
-                    .orElse(null);
-            }
-            if(documentName == null) return;
-            SerializableData message = ironWood.generate(documentName, model);
-            boolean acknowledged = ((Interaction) e.getEvent()).isAcknowledged();
-            /*
-            if true, can only send an embed, component, message or poll
-            if false, can send embed, component, message, poll or modal
-            IReplyCallback has the methods reply, deferReply, editOriginal, deleteOriginal, followupMessage, hook, and sendMessage. Only reply and deferReply can be used if not acknowledged. If acknowledged, can use all methods except reply and deferReply
-             */
-//            ((IReplyCallback) e.getEvent()).getHook().
-//            ((IReplyCallback) e.getEvent())
-//            switch(message){
-//                case MessageEmbed embed -> {
-//                    if(acknowledged){
-//                        e.getEvent().getHook().sendMessageEmbeds(embed).queue();
-//                    } else {
-//                        ((Interaction) e.getEvent()).replyEmbeds(embed).queue();
-//                    }
-//                }
-//            }
-            /*
-            TODO reply to event, and make sure if its acknowledged or not
-             */
-
         } catch (InvocationTargetException ex) {
             applicationContext.publishEvent(new DiscordExceptionEvent(bean, e.getEvent(), e.getKey(), ex.getTargetException()));
         } catch (IllegalAccessException ex){
             log.error("Unable to call event method", ex);
-        } catch (ParserConfigurationException | IOException | NoSuchFieldException | SAXException ex) {
-            throw new RuntimeException(ex);
         }
     }
 
