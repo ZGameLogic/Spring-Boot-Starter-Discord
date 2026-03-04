@@ -42,7 +42,7 @@ class DiscordEventDispatcher implements GenericApplicationListener {
         Object[] params = resolveParamsForControllerMethod(method, e.getEvent(), model);
         try {
             String returned = method.invoke(bean, params) instanceof String document ? document : null;
-            ironWood.replyToEvent(returned, ann, model, e.getEvent());
+            ironWood.replyToEvent(returned, ann, method, model, e.getEvent());
         } catch (InvocationTargetException ex) {
             applicationContext.publishEvent(new DiscordExceptionEvent(bean, e.getEvent(), e.getKey(), ex.getTargetException()));
         } catch (IllegalAccessException ex){

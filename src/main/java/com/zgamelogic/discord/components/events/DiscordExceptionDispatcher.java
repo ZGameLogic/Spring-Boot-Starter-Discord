@@ -48,7 +48,7 @@ class DiscordExceptionDispatcher implements GenericApplicationListener {
             Object bean = applicationContext.getBean(beanName);
             Object[] params = resolveParamsForExceptionMethod(method, e.getEvent(), model, e.getException());
             String returned = method.invoke(bean, params) instanceof String document ? document : null;
-            ironWood.replyToEvent(returned, ann, model, e.getEvent());
+            ironWood.replyToEvent(returned, ann, method, model, e.getEvent());
         } catch (Exception ex) {
             log.error("Unable to call exception method", ex);
         }
