@@ -1,6 +1,7 @@
 package com.zgamelogic.discord.components.events;
 
 import com.zgamelogic.discord.annotations.DiscordExceptionHandler;
+import com.zgamelogic.discord.services.ironwood.IronWood;
 import com.zgamelogic.discord.services.ironwood.Model;
 import net.dv8tion.jda.api.events.GenericEvent;
 import org.jetbrains.annotations.NotNull;
@@ -10,25 +11,30 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.core.ResolvableType;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
 
 import static com.zgamelogic.discord.helpers.Mapper.resolveParamsForArray;
 
-class DiscordExceptionApplicationListener implements GenericApplicationListener {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordExceptionApplicationListener.class);
+class DiscordExceptionDispatcher implements GenericApplicationListener {
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordExceptionDispatcher.class);
     private final ApplicationContext applicationContext;
     private final Method method;
     private final String beanName;
     private final List<Class<? extends Throwable>> supportedExceptions;
     private final DiscordEventKey methodKey;
+    private final IronWood ironWood;
+    private final Annotation ann;
 
-    DiscordExceptionApplicationListener(String beanName, Method method, DiscordExceptionHandler ann, ApplicationContext applicationContext) {
+    DiscordExceptionDispatcher(String beanName, Method method, DiscordExceptionHandler ann, ApplicationContext applicationContext) {
         this.beanName = beanName;
         this.method = method;
         this.applicationContext = applicationContext;
         supportedExceptions = List.of(ann.value());
+        this.ironWood = applicationContext.getBean(IronWood.class);
         methodKey = new DiscordEventKey(ann, method);
+        this.ann = ann;
     }
 
     @Override
@@ -41,7 +47,8 @@ class DiscordExceptionApplicationListener implements GenericApplicationListener 
             Model model = new Model();
             Object bean = applicationContext.getBean(beanName);
             Object[] params = resolveParamsForExceptionMethod(method, e.getEvent(), model, e.getException());
-            Object returned = method.invoke(bean, params);
+            String returned = method.invoke(bean, params) instanceof String document ? document : null;
+            ironWood.replyToEvent(returned, ann, method, model, e.getEvent());
         } catch (Exception ex) {
             log.error("Unable to call exception method", ex);
         }

@@ -1,19 +1,25 @@
 package com.zgamelogic.discord.services.ironwood;
 
+import com.zgamelogic.discord.annotations.mappings.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.Component;
 import net.dv8tion.jda.api.components.label.Label;
 import net.dv8tion.jda.api.components.textinput.TextInput;
 import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IModalCallback;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.data.SerializableData;
+import net.dv8tion.jda.api.utils.messages.MessagePollBuilder;
 import net.dv8tion.jda.api.utils.messages.MessagePollData;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.*;
+import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,6 +28,8 @@ import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -37,7 +45,50 @@ public class IronWood {
         loadDocuments(directory, resourcePatternResolver);
     }
 
-    public <T extends SerializableData> T generate(String documentName, Model model) throws NoSuchFieldException, IllegalAccessException, ParserConfigurationException, IOException, SAXException {
+    public void replyToEvent(String documentName, Annotation ann, Method method, Model model, GenericEvent event) {
+        documentName = extractDocument(documentName, ann, method);
+        if(documentName == null || documentName.isEmpty()) return;
+        try {
+            SerializableData messageData = generate(documentName, model);
+            if(((IReplyCallback) event).isAcknowledged()) {
+                switch(messageData) {
+                    case MessageEmbed embed -> ((IReplyCallback) event).getHook().sendMessageEmbeds(embed).addFiles(model.getFileUploads()).queue();
+                    case MessagePollData pollData -> ((IReplyCallback) event).getHook().sendMessagePoll(pollData).addFiles(model.getFileUploads()).queue();
+                    default -> log.warn("Unknown message data type: {}", messageData.getClass().getName());
+                }
+            } else {
+                switch(messageData) {
+                    case MessageEmbed embed -> ((IReplyCallback) event).replyEmbeds(embed).addFiles(model.getFileUploads()).queue();
+                    case Modal modal -> ((IModalCallback) event).replyModal(modal).queue();
+                    case MessagePollData pollData -> ((IReplyCallback) event).replyPoll(pollData).addFiles(model.getFileUploads()).queue();
+                    default -> log.warn("Unknown message data type: {}", messageData.getClass().getName());
+                }
+            }
+        } catch (ParserConfigurationException | IOException | SAXException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String extractDocument(String documentName, Annotation ann, Method method) {
+        if(documentName == null) {
+            if(method.isAnnotationPresent(com.zgamelogic.discord.annotations.mappings.Document.class))
+                ann = method.getAnnotation(com.zgamelogic.discord.annotations.mappings.Document.class);
+            switch(ann) {
+                case com.zgamelogic.discord.annotations.mappings.Document mapping -> documentName = mapping.value();
+                case ButtonMapping mapping -> documentName = mapping.document();
+                case EntitySelectMapping mapping -> documentName = mapping.document();
+                case GenericDiscordMapping mapping -> documentName = mapping.document();
+                case MessageContextMapping mapping -> documentName = mapping.document();
+                case ModalMapping mapping -> documentName = mapping.document();
+                case SlashCommandMapping mapping -> documentName = mapping.document();
+                case StringSelectMapping mapping -> documentName = mapping.document();
+                default -> {}
+            }
+        }
+        return documentName;
+    }
+
+    public SerializableData generate(String documentName, Model model) throws ParserConfigurationException, IOException, SAXException {
         String document = documents.get(documentName);
         document = flattenFor(document, model);
         document = parseInput(document, model);
@@ -49,15 +100,34 @@ public class IronWood {
         doc.getDocumentElement().normalize();
         Element root = doc.getDocumentElement();
         return switch (root.getTagName()) {
-            case "embed" -> (T) generateEmbed(root);
-            case "component" -> (T) generateComponent(root);
-            case "modal" -> (T) generateModal(root);
-            case "poll" -> (T) generatePoll(root);
+            case "embed" -> generateEmbed(root);
+//            case "component" -> generateComponent(root);
+            case "modal" -> generateModal(root);
+            case "poll" -> generatePoll(root);
             default -> {
                 log.warn("Unknown IronWood document type: {}", root.getTagName());
                 yield null;
             }
         };
+    }
+
+    public Component generateComponent(Element root) { return null; }
+
+    private MessagePollData generatePoll(Element root) {
+        String title = root.getAttribute("title");
+        MessagePollBuilder pb = new MessagePollBuilder(title);
+        // TODO duration
+//        String duration = root.getAttribute("duration");
+//        if(!duration.isEmpty()) pb.setDuration(Duration.ofMinutes(30));
+        NodeList children = root.getChildNodes();
+        for(int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() != Node.ELEMENT_NODE) continue;
+            if(!child.getNodeName().equals("answer")) continue;
+            String answer = child.getTextContent();
+            pb.addAnswer(answer);
+        }
+        return pb.build();
     }
 
     private MessageEmbed generateEmbed(Element root) {
@@ -123,9 +193,6 @@ public class IronWood {
         return eb.build();
     }
 
-    public Component generateComponent(Element root) { return null; }
-    private MessagePollData generatePoll(Element root) { return null; }
-
     public Modal generateModal(Element root) {
         String id = root.getAttribute("id");
         String title = root.getAttribute("title");
@@ -174,7 +241,7 @@ public class IronWood {
     private String flattenFor(String input, Model model) {
         Pattern forPattern = Pattern.compile("<for\\s+collection=\"([^\"]+)\">(.*?)</for>", Pattern.DOTALL);
         Matcher forMatcher = forPattern.matcher(input);
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         while (forMatcher.find()) {
             String collectionName = forMatcher.group(1);

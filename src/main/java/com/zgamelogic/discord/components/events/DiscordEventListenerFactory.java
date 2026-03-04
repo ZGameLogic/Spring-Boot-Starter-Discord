@@ -45,7 +45,7 @@ public class DiscordEventListenerFactory implements EventListenerFactory, Applic
     @Override
     public ApplicationListener<?> createApplicationListener(@NotNull String beanName, @NotNull Class<?> targetClass, @NotNull Method method) {
         Annotation ann = Arrays.stream(method.getAnnotations()).filter(supportedAnnotationsPredicate()).findFirst().get();
-        return new DiscordEventApplicationListener(beanName, method, ann, applicationContext);
+        return new DiscordEventDispatcher(beanName, method, ann, applicationContext);
     }
 
     private Predicate<Annotation> supportedAnnotationsPredicate() {

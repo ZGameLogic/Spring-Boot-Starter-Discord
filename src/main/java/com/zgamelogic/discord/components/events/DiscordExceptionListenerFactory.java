@@ -38,7 +38,7 @@ public class DiscordExceptionListenerFactory implements EventListenerFactory, Ap
     @Override
     public ApplicationListener<?> createApplicationListener(@NotNull String beanName, @NotNull Class<?> targetClass, @NotNull Method method) {
         Annotation ann = Arrays.stream(method.getAnnotations()).filter(supportedAnnotationsPredicate()).findFirst().get();
-        return new DiscordExceptionApplicationListener(beanName, method, (DiscordExceptionHandler) ann, applicationContext);
+        return new DiscordExceptionDispatcher(beanName, method, (DiscordExceptionHandler) ann, applicationContext);
     }
 
     private Predicate<Annotation> supportedAnnotationsPredicate() {
