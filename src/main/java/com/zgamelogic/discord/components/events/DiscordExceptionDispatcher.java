@@ -1,47 +1,65 @@
 package com.zgamelogic.discord.components.events;
 
 import com.zgamelogic.discord.annotations.DiscordExceptionHandler;
+import com.zgamelogic.discord.services.ironwood.IronWood;
+import com.zgamelogic.discord.services.ironwood.Model;
+import net.dv8tion.jda.api.events.GenericEvent;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.EventListenerFactory;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.event.GenericApplicationListener;
+import org.springframework.core.ResolvableType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.List;
-import java.util.function.Predicate;
 
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
-public class DiscordExceptionDispatcher implements EventListenerFactory, ApplicationContextAware {
-    private ApplicationContext applicationContext;
-    private final static List<Class<? extends Annotation>> SUPPORTED_ANNOTATIONS = List.of(
-        DiscordExceptionHandler.class
-    );
+import static com.zgamelogic.discord.helpers.Mapper.resolveParamsForArray;
 
-    @Override
-    public void setApplicationContext(@NotNull ApplicationContext applicationContext) {
+class DiscordExceptionDispatcher implements GenericApplicationListener {
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordExceptionDispatcher.class);
+    private final ApplicationContext applicationContext;
+    private final Method method;
+    private final String beanName;
+    private final List<Class<? extends Throwable>> supportedExceptions;
+    private final DiscordEventKey methodKey;
+    private final IronWood ironWood;
+    private final Annotation ann;
+
+    DiscordExceptionDispatcher(String beanName, Method method, DiscordExceptionHandler ann, ApplicationContext applicationContext) {
+        this.beanName = beanName;
+        this.method = method;
         this.applicationContext = applicationContext;
+        supportedExceptions = List.of(ann.value());
+        this.ironWood = applicationContext.getBean(IronWood.class);
+        methodKey = new DiscordEventKey(ann, method);
+        this.ann = ann;
     }
 
     @Override
-    public boolean supportsMethod(@NotNull Method method) {
-        return Arrays.stream(method.getAnnotations()).anyMatch(supportedAnnotationsPredicate());
+    public void onApplicationEvent(@NotNull ApplicationEvent event) {
+        if (!(event instanceof DiscordExceptionEvent e)) return;
+        if(e.getSource().getClass() != method.getDeclaringClass()) return;
+        if(!supportedExceptions.contains(e.getException().getClass())) return;
+        if(!methodKey.equals(e.getKey())) return;
+        try {
+            Model model = new Model();
+            Object bean = applicationContext.getBean(beanName);
+            Object[] params = resolveParamsForExceptionMethod(method, e.getEvent(), model, e.getException());
+            String returned = method.invoke(bean, params) instanceof String document ? document : null;
+            ironWood.replyToEvent(returned, ann, model, e.getEvent());
+        } catch (Exception ex) {
+            log.error("Unable to call exception method", ex);
+        }
     }
 
-    @NotNull
     @Override
-    public ApplicationListener<?> createApplicationListener(@NotNull String beanName, @NotNull Class<?> targetClass, @NotNull Method method) {
-        Annotation ann = Arrays.stream(method.getAnnotations()).filter(supportedAnnotationsPredicate()).findFirst().get();
-        return new DiscordExceptionApplicationListener(beanName, method, (DiscordExceptionHandler) ann, applicationContext);
+    public boolean supportsEventType(ResolvableType eventType) {
+        return DiscordExceptionEvent.class.isAssignableFrom(eventType.toClass());
     }
 
-    private Predicate<Annotation> supportedAnnotationsPredicate() {
-        return ann -> SUPPORTED_ANNOTATIONS.contains(ann.annotationType());
+    private Object[] resolveParamsForExceptionMethod(Method method, GenericEvent event, Model model, Throwable throwable){
+        return resolveParamsForArray(event, throwable, model, method.getParameters());
     }
 }

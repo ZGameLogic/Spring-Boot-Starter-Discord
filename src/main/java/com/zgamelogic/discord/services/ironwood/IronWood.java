@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.components.label.Label;
 import net.dv8tion.jda.api.components.textinput.TextInput;
 import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.data.SerializableData;
 import net.dv8tion.jda.api.utils.messages.MessagePollData;
@@ -22,6 +23,7 @@ import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -35,6 +37,17 @@ public class IronWood {
     public IronWood(@Value("${ironwood.directory:ironwood}") String directory, ResourcePatternResolver resourcePatternResolver) throws IOException {
         documents = new HashMap<>();
         loadDocuments(directory, resourcePatternResolver);
+    }
+
+    public void replyToEvent(String documentName, Annotation ann, Model model, GenericEvent event) {
+        String documentString = extractDocument(documentName, ann);
+    }
+
+    private String extractDocument(String documentName, Annotation ann) {
+        if(documentName == null) {
+            // TODO take out document name from annotation
+        }
+        return documents.get(documentName);
     }
 
     public <T extends SerializableData> T generate(String documentName, Model model) throws NoSuchFieldException, IllegalAccessException, ParserConfigurationException, IOException, SAXException {

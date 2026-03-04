@@ -22,6 +22,7 @@ class DiscordEventDispatcher implements GenericApplicationListener {
     private final DiscordEventKey methodKey;
     private final String beanName;
     private final IronWood ironWood;
+    private final Annotation ann;
 
     DiscordEventDispatcher(String beanName, Method method, Annotation ann, ApplicationContext applicationContext) {
         this.beanName = beanName;
@@ -29,6 +30,7 @@ class DiscordEventDispatcher implements GenericApplicationListener {
         this.ironWood = applicationContext.getBean(IronWood.class);
         methodKey = new DiscordEventKey(ann, method);
         this.applicationContext = applicationContext;
+        this.ann = ann;
     }
 
     @Override
@@ -39,7 +41,8 @@ class DiscordEventDispatcher implements GenericApplicationListener {
         Object bean = applicationContext.getBean(beanName);
         Object[] params = resolveParamsForControllerMethod(method, e.getEvent(), model);
         try {
-            Object returned = method.invoke(bean, params);
+            String returned = method.invoke(bean, params) instanceof String document ? document : null;
+            ironWood.replyToEvent(returned, ann, model, e.getEvent());
         } catch (InvocationTargetException ex) {
             applicationContext.publishEvent(new DiscordExceptionEvent(bean, e.getEvent(), e.getKey(), ex.getTargetException()));
         } catch (IllegalAccessException ex){
