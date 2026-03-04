@@ -1,6 +1,5 @@
 package com.zgamelogic.discord.components.events;
 
-import com.zgamelogic.discord.annotations.mappings.*;
 import com.zgamelogic.discord.services.ironwood.IronWood;
 import com.zgamelogic.discord.services.ironwood.Model;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -16,15 +15,15 @@ import java.lang.reflect.Method;
 
 import static com.zgamelogic.discord.helpers.Mapper.resolveParamsForArray;
 
-class DiscordEventApplicationListener implements GenericApplicationListener {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordEventApplicationListener.class);
+class DiscordEventDispatcher implements GenericApplicationListener {
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(DiscordEventDispatcher.class);
     private final ApplicationContext applicationContext;
     private final Method method;
     private final DiscordEventKey methodKey;
     private final String beanName;
     private final IronWood ironWood;
 
-    DiscordEventApplicationListener(String beanName, Method method, Annotation ann, ApplicationContext applicationContext) {
+    DiscordEventDispatcher(String beanName, Method method, Annotation ann, ApplicationContext applicationContext) {
         this.beanName = beanName;
         this.method = method;
         this.ironWood = applicationContext.getBean(IronWood.class);

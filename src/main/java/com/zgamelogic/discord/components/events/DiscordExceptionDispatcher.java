@@ -18,7 +18,7 @@ import java.util.function.Predicate;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class DiscordExceptionListenerFactory implements EventListenerFactory, ApplicationContextAware {
+public class DiscordExceptionDispatcher implements EventListenerFactory, ApplicationContextAware {
     private ApplicationContext applicationContext;
     private final static List<Class<? extends Annotation>> SUPPORTED_ANNOTATIONS = List.of(
         DiscordExceptionHandler.class
