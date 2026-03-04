@@ -8,8 +8,11 @@ import net.dv8tion.jda.api.components.textinput.TextInput;
 import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IModalCallback;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.data.SerializableData;
+import net.dv8tion.jda.api.utils.messages.MessagePollBuilder;
 import net.dv8tion.jda.api.utils.messages.MessagePollData;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,10 +47,23 @@ public class IronWood {
 
     public void replyToEvent(String documentName, Annotation ann, Method method, Model model, GenericEvent event) {
         documentName = extractDocument(documentName, ann, method);
-        if(documentName == null) return;
+        if(documentName == null || documentName.isEmpty()) return;
         try {
             SerializableData messageData = generate(documentName, model);
-            // TODO check event for acknowledgement and reply accordingly
+            if(((IReplyCallback) event).isAcknowledged()) {
+                switch(messageData) {
+                    case MessageEmbed embed -> ((IReplyCallback) event).getHook().sendMessageEmbeds(embed).addFiles(model.getFileUploads()).queue();
+                    case MessagePollData pollData -> ((IReplyCallback) event).getHook().sendMessagePoll(pollData).addFiles(model.getFileUploads()).queue();
+                    default -> log.warn("Unknown message data type: {}", messageData.getClass().getName());
+                }
+            } else {
+                switch(messageData) {
+                    case MessageEmbed embed -> ((IReplyCallback) event).replyEmbeds(embed).addFiles(model.getFileUploads()).queue();
+                    case Modal modal -> ((IModalCallback) event).replyModal(modal).queue();
+                    case MessagePollData pollData -> ((IReplyCallback) event).replyPoll(pollData).addFiles(model.getFileUploads()).queue();
+                    default -> log.warn("Unknown message data type: {}", messageData.getClass().getName());
+                }
+            }
         } catch (ParserConfigurationException | IOException | SAXException e) {
             throw new RuntimeException(e);
         }
@@ -97,7 +113,22 @@ public class IronWood {
 
     public Component generateComponent(Element root) { return null; }
 
-    private MessagePollData generatePoll(Element root) { return null; }
+    private MessagePollData generatePoll(Element root) {
+        String title = root.getAttribute("title");
+        MessagePollBuilder pb = new MessagePollBuilder(title);
+        // TODO duration
+//        String duration = root.getAttribute("duration");
+//        if(!duration.isEmpty()) pb.setDuration(Duration.ofMinutes(30));
+        NodeList children = root.getChildNodes();
+        for(int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() != Node.ELEMENT_NODE) continue;
+            if(!child.getNodeName().equals("answer")) continue;
+            String answer = child.getTextContent();
+            pb.addAnswer(answer);
+        }
+        return pb.build();
+    }
 
     private MessageEmbed generateEmbed(Element root) {
         EmbedBuilder eb = new EmbedBuilder();
