@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -42,7 +43,8 @@ public abstract class Mapper {
                 params.add(null);
                 continue;
             }
-            EventProperty eventProperty = parameter.getAnnotation(EventProperty.class);
+            EventProperty eventProperty = AnnotatedElementUtils.findMergedAnnotation(parameter, EventProperty.class);
+
             String name = eventProperty != null && !eventProperty.name().isEmpty() ? eventProperty.name() : parameter.getName();
             if(isClassValidToObject(parameter.getType())){ // event property
                 params.add(extractOptionFromEvent(event, name));
