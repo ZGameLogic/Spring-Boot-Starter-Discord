@@ -10,6 +10,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Annotation for a mapping that catches entity select interactions.
+ * @see net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent
  * @author Ben Shabowski
  * @since 6.0.0
  */
