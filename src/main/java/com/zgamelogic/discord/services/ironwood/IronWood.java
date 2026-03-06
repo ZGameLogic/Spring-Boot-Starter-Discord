@@ -2,8 +2,10 @@ package com.zgamelogic.discord.services.ironwood;
 
 import com.zgamelogic.discord.annotations.mappings.*;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.components.Component;
+import net.dv8tion.jda.api.components.container.Container;
 import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.selections.EntitySelectMenu;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.components.textinput.TextInput;
 import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -11,7 +13,6 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IModalCallback;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.modals.Modal;
-import net.dv8tion.jda.api.utils.data.SerializableData;
 import net.dv8tion.jda.api.utils.messages.MessagePollBuilder;
 import net.dv8tion.jda.api.utils.messages.MessagePollData;
 import org.slf4j.Logger;
@@ -24,7 +25,7 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.awt.*;
+import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -49,11 +50,12 @@ public class IronWood {
         documentName = extractDocument(documentName, ann, method);
         if(documentName == null || documentName.isEmpty()) return;
         try {
-            SerializableData messageData = generate(documentName, model);
+            Object messageData = generate(documentName, model);
             if(((IReplyCallback) event).isAcknowledged()) {
                 switch(messageData) {
                     case MessageEmbed embed -> ((IReplyCallback) event).getHook().sendMessageEmbeds(embed).addFiles(model.getFileUploads()).queue();
                     case MessagePollData pollData -> ((IReplyCallback) event).getHook().sendMessagePoll(pollData).addFiles(model.getFileUploads()).queue();
+                    case Container component -> ((IReplyCallback) event).getHook().sendMessageComponents(component).useComponentsV2().queue();
                     default -> log.warn("Unknown message data type: {}", messageData.getClass().getName());
                 }
             } else {
@@ -61,6 +63,7 @@ public class IronWood {
                     case MessageEmbed embed -> ((IReplyCallback) event).replyEmbeds(embed).addFiles(model.getFileUploads()).queue();
                     case Modal modal -> ((IModalCallback) event).replyModal(modal).queue();
                     case MessagePollData pollData -> ((IReplyCallback) event).replyPoll(pollData).addFiles(model.getFileUploads()).queue();
+                    case Container component -> ((IReplyCallback) event).replyComponents(component).useComponentsV2().queue();
                     default -> log.warn("Unknown message data type: {}", messageData.getClass().getName());
                 }
             }
@@ -88,7 +91,7 @@ public class IronWood {
         return documentName;
     }
 
-    public SerializableData generate(String documentName, Model model) throws ParserConfigurationException, IOException, SAXException {
+    public Object generate(String documentName, Model model) throws ParserConfigurationException, IOException, SAXException {
         String document = documents.get(documentName);
         document = flattenFor(document, model);
         document = parseInput(document, model);
@@ -101,7 +104,7 @@ public class IronWood {
         Element root = doc.getDocumentElement();
         return switch (root.getTagName()) {
             case "embed" -> generateEmbed(root);
-//            case "component" -> generateComponent(root);
+            case "component" -> generateComponent(root);
             case "modal" -> generateModal(root);
             case "poll" -> generatePoll(root);
             default -> {
@@ -111,7 +114,7 @@ public class IronWood {
         };
     }
 
-    public Component generateComponent(Element root) { return null; }
+    public Container generateComponent(Element root) { return null; }
 
     private MessagePollData generatePoll(Element root) {
         String title = root.getAttribute("title");
@@ -201,6 +204,17 @@ public class IronWood {
         for(int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
             if(child.getNodeType() != Node.ELEMENT_NODE) continue;
+            if(child.getNodeName().equals("select")){
+                String menuLabel = ((Element)child).getAttribute("label");
+                modal.addComponents(Label.of(menuLabel, generateStringSelectMenu(child)));
+                continue;
+            }
+            if(child.getNodeName().equals("entity-select")){
+                String menuLabel = ((Element)child).getAttribute("label");
+                modal.addComponents(Label.of(menuLabel, generateEntitySelectMenu(child)));
+                continue;
+            }
+            if(!child.getNodeName().equals("input")) continue;
             String textId = ((Element)child).getAttribute("id");
             String textLabel = ((Element)child).getAttribute("label");
             TextInputStyle textStyle = ((Element)child).getAttribute("style").toLowerCase().trim().equals("paragraph") ? TextInputStyle.PARAGRAPH : TextInputStyle.SHORT;
@@ -236,6 +250,39 @@ public class IronWood {
         } catch (Exception e) {
             return input;
         }
+    }
+
+    // TODO mase these handle more options
+
+    private StringSelectMenu generateStringSelectMenu(Node node){
+        String id = ((Element)node).getAttribute("id");
+        StringSelectMenu.Builder menu = StringSelectMenu.create(id);
+        String placeholder = ((Element)node).getAttribute("placeholder");
+        if(!placeholder.isEmpty()) menu.setPlaceholder(placeholder);
+        NodeList children = node.getChildNodes();
+        for(int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if(child.getNodeType() != Node.ELEMENT_NODE) continue;
+            if(!child.getNodeName().equals("option")) continue;
+            String label = ((Element)child).getAttribute("label");
+            String value = ((Element)child).getAttribute("value");
+            String description = ((Element)child).getAttribute("description");
+            menu.addOption(label, value, description);
+        }
+        return menu.build();
+    }
+
+    private EntitySelectMenu generateEntitySelectMenu(Node node) {
+        String id = ((Element)node).getAttribute("id");
+        boolean role = Boolean.parseBoolean(((Element)node).getAttribute("role"));
+        boolean user = Boolean.parseBoolean(((Element)node).getAttribute("user"));
+        boolean channel = Boolean.parseBoolean(((Element)node).getAttribute("channel"));
+        List<EntitySelectMenu.SelectTarget> targets = new ArrayList<>();
+        if(role) targets.add(EntitySelectMenu.SelectTarget.ROLE);
+        if(user) targets.add(EntitySelectMenu.SelectTarget.USER);
+        if(channel) targets.add(EntitySelectMenu.SelectTarget.CHANNEL);
+        EntitySelectMenu.Builder menu = EntitySelectMenu.create(id, targets);
+        return menu.build();
     }
 
     private String flattenFor(String input, Model model) {
