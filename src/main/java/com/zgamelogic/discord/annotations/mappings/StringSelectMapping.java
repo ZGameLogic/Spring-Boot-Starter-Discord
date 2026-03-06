@@ -17,8 +17,17 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @EventListener(value = DiscordEvent.class)
 public @interface StringSelectMapping {
+    /**
+     * Alias for id
+     * @return The custom id given to an interaction to identify the event to catch
+     */
     @AliasFor("id")
     String value() default "";
+    /**
+     * The id of the event to catch. This is the custom id/name given to an interaction when responding to an event.
+     * If value and id are left blank, this mapping will catch all interactions.
+     * @return The custom id given to an interaction to identify the event to catch
+     */
     @AliasFor("value")
     String id() default "";
     /**

@@ -21,15 +21,14 @@ import java.lang.annotation.Target;
 public @interface ButtonMapping {
     /**
      * Alias for id
-     * @return The custom id given to a button to identify the event to catch
+     * @return The custom id given to an interaction to identify the event to catch
      */
     @AliasFor("id")
     String value() default "";
     /**
-     * The id of the button to catch. This is the custom id given to a button when responding to an event.
-     * If value and id are left blank, this mapping will catch all button interactions.
-     * @return The custom id given to a button to identify the event to catch
-     * @see net.dv8tion.jda.api.components.buttons.Button
+     * The id of the event to catch. This is the custom id/name given to an interaction when responding to an event.
+     * If value and id are left blank, this mapping will catch all interactions.
+     * @return The custom id given to an interaction to identify the event to catch
      */
     @AliasFor("value")
     String id() default "";
