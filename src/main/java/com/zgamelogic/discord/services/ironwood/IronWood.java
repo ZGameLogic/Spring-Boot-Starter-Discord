@@ -114,7 +114,10 @@ public class IronWood {
         };
     }
 
-    public Container generateComponent(Element root) { return null; }
+    public Container generateComponent(Element root) {
+        // TODO implement
+        return null;
+    }
 
     private MessagePollData generatePoll(Element root) {
         String title = root.getAttribute("title");
