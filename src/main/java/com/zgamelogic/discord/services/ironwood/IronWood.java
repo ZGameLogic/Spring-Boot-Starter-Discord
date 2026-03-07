@@ -119,14 +119,14 @@ public class IronWood {
     private MessagePollData generatePoll(Element root) {
         String title = root.getAttribute("title");
         MessagePollBuilder pb = new MessagePollBuilder(title);
+        boolean multiAnswer = Boolean.parseBoolean(root.getAttribute("multiAnswer"));
+        pb.setMultiAnswer(multiAnswer);
         // TODO duration
-//        String duration = root.getAttribute("duration");
-//        if(!duration.isEmpty()) pb.setDuration(Duration.ofMinutes(30));
         NodeList children = root.getChildNodes();
         for(int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
             if (child.getNodeType() != Node.ELEMENT_NODE) continue;
-            if(!child.getNodeName().equals("answer")) continue;
+            if(!child.getNodeName().equals("option")) continue;
             String answer = child.getTextContent();
             pb.addAnswer(answer);
         }
@@ -222,6 +222,7 @@ public class IronWood {
             String textMinLength = ((Element)child).getAttribute("min-length");
             String textMaxLength = ((Element)child).getAttribute("max-length");
             String textValue = ((Element)child).getAttribute("value");
+            String textPlaceholder = ((Element)child).getAttribute("placeholder");
             TextInput.Builder textBuilder = TextInput.create(textId, textStyle);
             if(!textRequired.isEmpty())
                 textBuilder.setRequired(Boolean.parseBoolean(textRequired));
@@ -231,6 +232,8 @@ public class IronWood {
                 textBuilder.setMaxLength(Integer.parseInt(textMaxLength));
             if(!textValue.isEmpty())
                 textBuilder.setValue(textValue);
+            if(!textPlaceholder.isEmpty())
+                textBuilder.setPlaceholder(textPlaceholder);
             modal.addComponents(Label.of(textLabel, textBuilder.build()));
         }
         return modal.build();
@@ -252,9 +255,8 @@ public class IronWood {
         }
     }
 
-    // TODO mase these handle more options
-
     private StringSelectMenu generateStringSelectMenu(Node node){
+        // TODO make this handle more options
         String id = ((Element)node).getAttribute("id");
         StringSelectMenu.Builder menu = StringSelectMenu.create(id);
         String placeholder = ((Element)node).getAttribute("placeholder");
@@ -273,10 +275,12 @@ public class IronWood {
     }
 
     private EntitySelectMenu generateEntitySelectMenu(Node node) {
+        // TODO make this handle more options
         String id = ((Element)node).getAttribute("id");
-        boolean role = Boolean.parseBoolean(((Element)node).getAttribute("role"));
-        boolean user = Boolean.parseBoolean(((Element)node).getAttribute("user"));
-        boolean channel = Boolean.parseBoolean(((Element)node).getAttribute("channel"));
+        String targetsString = ((Element)node).getAttribute("targets");
+        boolean role = targetsString.contains("role");
+        boolean user = targetsString.contains("user");
+        boolean channel = targetsString.contains("channel");
         List<EntitySelectMenu.SelectTarget> targets = new ArrayList<>();
         if(role) targets.add(EntitySelectMenu.SelectTarget.ROLE);
         if(user) targets.add(EntitySelectMenu.SelectTarget.USER);

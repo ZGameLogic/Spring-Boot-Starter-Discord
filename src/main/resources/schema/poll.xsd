@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+        xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="com.zgamelogic.poll"
+        xmlns="com.zgamelogic.poll"
+        elementFormDefault="qualified"
+>
+
+    <xs:element name="poll">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="answer" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+
+            <xs:attribute name="title" type="xs:string" use="required"/>
+            <xs:attribute name="multiAnswer" type="xs:boolean"/>
+
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>
