@@ -46,7 +46,7 @@
                     <xs:element name="select">
                         <xs:complexType>
                             <xs:sequence>
-                                <xs:element name="option" minOccurs="1" maxOccurs="unbounded">
+                                <xs:element name="option" maxOccurs="unbounded">
                                     <xs:complexType>
                                         <xs:attribute name="label" type="xs:string" use="required"/>
                                         <xs:attribute name="value" type="xs:string" use="required"/>
