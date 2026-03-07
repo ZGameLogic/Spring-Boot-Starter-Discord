@@ -17,8 +17,10 @@ import net.dv8tion.jda.api.utils.messages.MessagePollBuilder;
 import net.dv8tion.jda.api.utils.messages.MessagePollData;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.templatemode.TemplateMode;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.w3c.dom.*;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -27,23 +29,25 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 public class IronWood {
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(IronWood.class);
-    private final Map<String, String> documents;
+    private final TemplateEngine templateEngine;
 
-    public IronWood(@Value("${ironwood.directory:ironwood}") String directory, ResourcePatternResolver resourcePatternResolver) throws IOException {
-        documents = new HashMap<>();
-        loadDocuments(directory, resourcePatternResolver);
+    public IronWood(@Value("${ironwood.directory:ironwood}") String directory) {
+        ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
+        resolver.setTemplateMode(TemplateMode.XML);
+        resolver.setPrefix(directory + "/");
+        resolver.setSuffix(".xml");
+        TemplateEngine engine = new TemplateEngine();
+        engine.setTemplateResolver(resolver);
+        this.templateEngine = engine;
     }
 
     public void replyToEvent(String documentName, Annotation ann, Method method, Model model, GenericEvent event) {
@@ -92,9 +96,8 @@ public class IronWood {
     }
 
     public Object generate(String documentName, Model model) throws ParserConfigurationException, IOException, SAXException {
-        String document = documents.get(documentName);
-        document = flattenFor(document, model);
-        document = parseInput(document, model);
+        // TODO fix the xsd to support thymleaf syntax
+        String document = templateEngine.process(documentName, model.getContext());
         /*
         Possible ideas to make this better
         resolve emoji references? likes ${em:emoji_name} will turn into the mentionable?
@@ -242,22 +245,6 @@ public class IronWood {
         return modal.build();
     }
 
-    private String parseInput(String input, Model model) {
-        if (input == null || input.isEmpty()) return "";
-        try {
-            Set<String> result = new HashSet<>();
-            Pattern pattern = Pattern.compile("\\$\\{([^}]+)}");
-            Matcher matcher = pattern.matcher(input);
-            while (matcher.find()) result.add(matcher.group(1));
-            for (String key : result) {
-                input = input.replaceAll("\\$\\{" + Pattern.quote(key) + "}", Matcher.quoteReplacement(model.resolveKey(key)));
-            }
-            return input;
-        } catch (Exception e) {
-            return input;
-        }
-    }
-
     private StringSelectMenu generateStringSelectMenu(Node node){
         // TODO make this handle more options
         String id = ((Element)node).getAttribute("id");
@@ -290,50 +277,5 @@ public class IronWood {
         if(channel) targets.add(EntitySelectMenu.SelectTarget.CHANNEL);
         EntitySelectMenu.Builder menu = EntitySelectMenu.create(id, targets);
         return menu.build();
-    }
-
-    private String flattenFor(String input, Model model) {
-        Pattern forPattern = Pattern.compile("<for\\s+collection=\"([^\"]+)\">(.*?)</for>", Pattern.DOTALL);
-        Matcher forMatcher = forPattern.matcher(input);
-        StringBuilder result = new StringBuilder();
-
-        while (forMatcher.find()) {
-            String collectionName = forMatcher.group(1);
-            String forContent = forMatcher.group(2);
-
-            Collection<?> collection = model.resolveCollection(collectionName);
-            StringBuilder expanded = new StringBuilder();
-
-            for (int i = 0; i < collection.size(); i++) {
-                String itemContent = forContent
-                    .replace("$[i]", String.valueOf(i))
-                    .replaceAll("\\$\\{i\\.([a-zA-Z0-9_]+)}", "\\$\\{" + collectionName + "[" + i + "].$1}")
-                    .replaceAll("\\$\\{i}", "\\$\\{" + collectionName + "[" + i + "]}");
-                expanded.append(itemContent);
-            }
-
-            forMatcher.appendReplacement(result, Matcher.quoteReplacement(expanded.toString()));
-        }
-        forMatcher.appendTail(result);
-        return result.toString();
-    }
-
-    private void loadDocuments(String directory, ResourcePatternResolver resourcePatternResolver) throws IOException {
-        try {
-            Arrays.stream(resourcePatternResolver.getResources("classpath:" + directory + "/*")).forEach(resource -> {
-                String filename = resource.getFilename();
-                if (filename == null) return;
-                filename = filename.replace(".xml", "");
-                try {
-                    String document = new String(resource.getInputStream().readAllBytes());
-                    documents.put(filename, document);
-                    log.info("Registered IronWood document: {}", filename);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        } catch (FileNotFoundException e) {
-            log.debug("No Ironwood directory found");
-        }
     }
 }

@@ -7,7 +7,7 @@
     <name>Spring Boot Starter Discord</name>
     <groupId>com.zgamelogic</groupId>
     <artifactId>spring-boot-starter-discord</artifactId>
-    <version>6.0.1</version>
+    <version>6.0.2</version>
     <description>Integration library for spring and JDA: a discord bot API.</description>
     <url>https://github.com/ZGameLogic/Spring-Boot-Starter-Discord</url>
 
@@ -24,13 +24,6 @@
         <version>3.5.11</version>
     </parent>
 
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
-
     <dependencies>
         <dependency>
             <groupId>net.dv8tion</groupId>
@@ -41,6 +34,17 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ognl</groupId>
+            <artifactId>ognl</artifactId>
+            <version>3.3.4</version>
         </dependency>
 
         <dependency>
