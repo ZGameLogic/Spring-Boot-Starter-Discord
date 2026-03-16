@@ -48,4 +48,7 @@ public @interface SlashCommandMapping {
      * @return Document name to respond with
      */
     String document() default "";
+
+    @AliasFor(annotation = EventListener.class, attribute = "condition")
+    String condition() default "";
 }
