@@ -10,7 +10,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Exception handler annotation
+ * @author Ben Shabowski
+ * @since 6.0.0
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -22,5 +23,10 @@ public @interface DiscordExceptionHandler {
     String group() default "";
     String sub() default "";
     String focused() default "";
+    /**
+     * The name of the document to respond to this event automatically.
+     * If left blank, no document will be sent.
+     * @return Document name to respond with
+     */
     String document() default "";
 }

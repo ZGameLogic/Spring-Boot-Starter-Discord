@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+        xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="com.zgamelogic.embed"
+        xmlns="com.zgamelogic.embed"
+        elementFormDefault="qualified"
+>
+
+    <xs:element name="embed">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="title" minOccurs="0">
+                    <xs:complexType mixed="true">
+                        <xs:attribute name="url" type="xs:string"/>
+                        <xs:anyAttribute namespace="##other" processContents="lax"/>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="description" minOccurs="0">
+                    <xs:complexType mixed="true">
+                        <xs:anyAttribute namespace="##other" processContents="lax"/>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="author" minOccurs="0">
+                    <xs:complexType mixed="true">
+                        <xs:attribute name="url" type="xs:string"/>
+                        <xs:attribute name="iconUrl" type="xs:string"/>
+                        <xs:anyAttribute namespace="##other" processContents="lax"/>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="footer" minOccurs="0">
+                    <xs:complexType mixed="true">
+                        <xs:attribute name="iconUrl" type="xs:string"/>
+                        <xs:anyAttribute namespace="##other" processContents="lax"/>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="thumbnail" minOccurs="0">
+                    <xs:complexType>
+                        <xs:attribute name="url" type="xs:string" use="required"/>
+                        <xs:anyAttribute namespace="##other" processContents="lax"/>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="image" minOccurs="0">
+                    <xs:complexType>
+                        <xs:attribute name="url" type="xs:string" use="required"/>
+                        <xs:anyAttribute namespace="##other" processContents="lax"/>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="field" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType mixed="true">
+                        <xs:attribute name="name" type="xs:string" use="required"/>
+                        <xs:attribute name="inline" type="xs:boolean"/>
+                        <xs:anyAttribute namespace="##other" processContents="lax"/>
+                    </xs:complexType>
+                </xs:element>
+
+            </xs:sequence>
+
+            <xs:attribute name="color" type="xs:string"/>
+            <xs:anyAttribute namespace="##other" processContents="lax"/>
+
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

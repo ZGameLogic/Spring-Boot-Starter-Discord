@@ -13,6 +13,8 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.modals.ModalMapping;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -42,7 +44,8 @@ public abstract class Mapper {
                 params.add(null);
                 continue;
             }
-            EventProperty eventProperty = parameter.getAnnotation(EventProperty.class);
+            EventProperty eventProperty = AnnotatedElementUtils.findMergedAnnotation(parameter, EventProperty.class);
+
             String name = eventProperty != null && !eventProperty.name().isEmpty() ? eventProperty.name() : parameter.getName();
             if(isClassValidToObject(parameter.getType())){ // event property
                 params.add(extractOptionFromEvent(event, name));
@@ -69,8 +72,18 @@ public abstract class Mapper {
         } else if (event instanceof CommandAutoCompleteInteractionEvent autoCompleteEvent) {
             return eventOptionToObject(autoCompleteEvent.getOption(name));
         } else if (event instanceof ModalInteractionEvent modalEvent) {
-            if(modalEvent.getValue(name) == null) return null;
-            return modalEvent.getValue(name).getAsString();
+            ModalMapping mapping = modalEvent.getValue(name);
+            if(mapping == null) return null;
+            return switch(mapping.getType()){
+                case TEXT_INPUT -> mapping.getAsString();
+                case STRING_SELECT -> {
+                   List<String> list = mapping.getAsStringList();
+                   if(list.size() == 1) yield list.getFirst();
+                   yield list;
+                }
+                case MENTIONABLE_SELECT -> mapping.getAsMentions();
+                default -> null;
+            };
         }
         return null;
     }

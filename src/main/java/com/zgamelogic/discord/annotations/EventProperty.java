@@ -1,5 +1,7 @@
 package com.zgamelogic.discord.annotations;
 
+import org.springframework.core.annotation.AliasFor;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -19,9 +21,16 @@ import java.lang.annotation.Target;
 @Target({ElementType.PARAMETER, ElementType.FIELD})
 public @interface EventProperty {
     /**
+     * Alias for name
+     * @return name of command option value
+     */
+    @AliasFor("name")
+    String value() default "";
+    /**
      * Use this to look for a specific name of the command option value.
      * If omitted, it will use the method parameter name
      * @return name of command option value
      */
+    @AliasFor("value")
     String name() default "";
 }

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+        xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="com.zgamelogic.modal"
+        xmlns="com.zgamelogic.modal"
+        elementFormDefault="qualified"
+>
+
+    <xs:simpleType name="entityTarget">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="role"/>
+            <xs:enumeration value="user"/>
+            <xs:enumeration value="channel"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="entityTargetList">
+        <xs:list itemType="entityTarget"/>
+    </xs:simpleType>
+
+    <xs:simpleType name="inputStyle">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="paragraph"/>
+            <xs:enumeration value="short"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:element name="modal">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:choice maxOccurs="unbounded">
+
+                    <xs:element name="input">
+                        <xs:complexType>
+                            <xs:attribute name="id" type="xs:string" use="required"/>
+                            <xs:attribute name="label" type="xs:string" use="required"/>
+                            <xs:attribute name="style" type="inputStyle"/>
+                            <xs:attribute name="required" type="xs:boolean"/>
+                            <xs:attribute name="min-length" type="xs:int"/>
+                            <xs:attribute name="max-length" type="xs:int"/>
+                            <xs:attribute name="value" type="xs:string"/>
+                            <xs:attribute name="placeholder" type="xs:string"/>
+                        </xs:complexType>
+                    </xs:element>
+
+                    <xs:element name="select">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="option" maxOccurs="unbounded">
+                                    <xs:complexType>
+                                        <xs:attribute name="label" type="xs:string" use="required"/>
+                                        <xs:attribute name="value" type="xs:string" use="required"/>
+                                        <xs:attribute name="description" type="xs:string"/>
+                                    </xs:complexType>
+                                </xs:element>
+                            </xs:sequence>
+
+                            <xs:attribute name="id" type="xs:string" use="required"/>
+                            <xs:attribute name="label" type="xs:string" use="required"/>
+                            <xs:attribute name="placeholder" type="xs:string"/>
+                        </xs:complexType>
+                    </xs:element>
+
+                    <xs:element name="entity-select">
+                        <xs:complexType>
+                            <xs:attribute name="id" type="xs:string" use="required"/>
+                            <xs:attribute name="label" type="xs:string" use="required"/>
+                            <xs:attribute name="targets" type="entityTargetList"/>
+                        </xs:complexType>
+                    </xs:element>
+
+                </xs:choice>
+            </xs:sequence>
+
+            <xs:attribute name="id" type="xs:string" use="required"/>
+            <xs:attribute name="title" type="xs:string" use="required"/>
+
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>
