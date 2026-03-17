@@ -22,93 +22,66 @@ import java.util.List;
 public class DiscordEventKey {
     private final Class<? extends GenericEvent> clazz;
     private final SpelExpressionParser parser;
-    private final StandardEvaluationContext context;
     private final String spel;
 
     public DiscordEventKey(Annotation mapping, Method method) {
         parser = new SpelExpressionParser();
-        context = new StandardEvaluationContext();
 
-        String id;
-        String subId;
-        String groupName;
-        String focusedOption;
-        String spel = "";
+        String spel;
+        List<String> expressions = new ArrayList<>();
         switch (mapping) {
             case SlashCommandMapping slashCommandMapping -> {
                 clazz = SlashCommandInteractionEvent.class;
-                spel = AnnotatedElementUtils.findMergedAnnotation(method, SlashCommandMapping.class).condition();
-                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, SlashCommandMapping.class).id());
-                subId = valueOrNull(slashCommandMapping.sub());
-                groupName = valueOrNull(slashCommandMapping.group());
-                focusedOption = null;
+                spel = slashCommandMapping.condition();
+                addExpression("#root.getName() == '%s'", AnnotatedElementUtils.findMergedAnnotation(method, SlashCommandMapping.class).id(), expressions);
+                addExpression("#root.getSubcommandName() == '%s'", slashCommandMapping.sub(), expressions);
+                addExpression("#root.getSubcommandGroup() == '%s'", slashCommandMapping.group(), expressions);
             }
             case SlashCommandAutocompleteMapping slashCommandMapping -> {
                 clazz = CommandAutoCompleteInteractionEvent.class;
-                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, SlashCommandAutocompleteMapping.class).id());
-                subId = valueOrNull(slashCommandMapping.sub());
-                groupName = valueOrNull(slashCommandMapping.group());
-                focusedOption = valueOrNull(slashCommandMapping.focused());
+                spel = slashCommandMapping.condition();
+                addExpression("#root.getName() == '%s'", AnnotatedElementUtils.findMergedAnnotation(method, SlashCommandAutocompleteMapping.class).id(), expressions);
+                addExpression("#root.getSubcommandName() == '%s'", slashCommandMapping.sub(), expressions);
+                addExpression("#root.getSubcommandGroup() == '%s'", slashCommandMapping.group(), expressions);
+                addExpression("#root.getFocusedOption().getName() == '%s'", slashCommandMapping.focused(), expressions);
             }
-            case MessageContextMapping _ -> {
+            case MessageContextMapping messageContextMapping -> {
                 clazz = MessageContextInteractionEvent.class;
-                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, MessageContextMapping.class).id());
-                subId = null;
-                groupName = null;
-                focusedOption = null;
+                spel = messageContextMapping.condition();
+                addExpression("#root.getName() == '%s'", AnnotatedElementUtils.findMergedAnnotation(method, MessageContextMapping.class).id(), expressions);
             }
-            case ButtonMapping _ -> {
+            case ButtonMapping buttonMapping -> {
                 clazz = ButtonInteractionEvent.class;
-                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, ButtonMapping.class).id());
-                subId = null;
-                groupName = null;
-                focusedOption = null;
+                spel = buttonMapping.condition();
+                addExpression("#root.getButton().getCustomId() == '%s'", AnnotatedElementUtils.findMergedAnnotation(method, ButtonMapping.class).id(), expressions);
             }
-            case StringSelectMapping _ -> {
+            case StringSelectMapping stringSelectMapping -> {
                 clazz = StringSelectInteractionEvent.class;
-                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, StringSelectMapping.class).id());
-                subId = null;
-                groupName = null;
-                focusedOption = null;
+                spel = stringSelectMapping.condition();
+                addExpression("#root.getCustomId() == '%s'", AnnotatedElementUtils.findMergedAnnotation(method, StringSelectMapping.class).id(), expressions);
             }
-            case EntitySelectMapping _ -> {
+            case EntitySelectMapping entitySelectMapping -> {
                 clazz = EntitySelectInteractionEvent.class;
-                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, EntitySelectMapping.class).id());
-                subId = null;
-                groupName = null;
-                focusedOption = null;
+                spel = entitySelectMapping.condition();
+                addExpression("#root.getCustomId() == '%s'", AnnotatedElementUtils.findMergedAnnotation(method, EntitySelectMapping.class).id(), expressions);
             }
-            case ModalMapping _ -> {
+            case ModalMapping modalMapping -> {
                 clazz = ModalInteractionEvent.class;
-                id = valueOrNull(AnnotatedElementUtils.findMergedAnnotation(method, ModalMapping.class).id());
-                subId = null;
-                groupName = null;
-                focusedOption = null;
+                spel = modalMapping.condition();
+                addExpression("#root.getCustomId() == '%s'", AnnotatedElementUtils.findMergedAnnotation(method, ModalMapping.class).id(), expressions);
             }
             case GenericDiscordMapping discordMapping -> {
                 clazz = discordMapping.event();
-                id = null;
-                subId = null;
-                groupName = null;
-                focusedOption = null;
+                spel = discordMapping.condition();
             }
             case DiscordExceptionHandler exceptionHandler -> {
                 clazz = exceptionHandler.event();
-                id = valueOrNull(exceptionHandler.id());
-                subId = valueOrNull(exceptionHandler.sub());
-                groupName = valueOrNull(exceptionHandler.group());
-                focusedOption = valueOrNull(exceptionHandler.focused());
+                spel = exceptionHandler.condition();
             }
             default ->
                     throw new IllegalArgumentException("Unsupported mapping type: " + mapping.annotationType().getName());
         }
         if(spel.isBlank()) {
-            List<String> expressions = new ArrayList<>();
-            if (id != null) expressions.add("#root.event.getName() == '" + id + "'");
-            if (subId != null) expressions.add("#root.event.getSubcommandName() == '" + subId + "'");
-            if (groupName != null) expressions.add("#root.event.getGroupName() == '" + groupName + "'");
-            if (focusedOption != null)
-                expressions.add("#root.event.getFocusedOption().getName() == '" + focusedOption + "'");
             this.spel = expressions.isEmpty() ? "" : String.join(" && ", expressions);
         } else {
             this.spel = spel;
@@ -119,10 +92,18 @@ public class DiscordEventKey {
         return value.isEmpty() ? null : value;
     }
 
-    public boolean matches(DiscordEvent event, Object bean){
-        if (!clazz.isAssignableFrom(event.getEvent().getClass())) return false;
+    private void addExpression(String expression, String value, List<String> expressions) {
+        if (value != null && !value.isBlank()) expressions.add(String.format(expression, value));
+    }
+
+    public boolean matches(GenericEvent event, Method method, Object[] params){
+        if (!clazz.isAssignableFrom(event.getClass())) return false;
+        if(spel.isBlank()) return true;
+        StandardEvaluationContext context = new StandardEvaluationContext();
         context.setRootObject(event);
-        // TODO maybe extract out other variables to context like event properties
+        for(int i = 0; i < params.length; i++){
+            context.setVariable(method.getParameters()[i].getName(), params[i]);
+        }
         return parser.parseExpression(spel).getValue(context, Boolean.class);
     }
 }

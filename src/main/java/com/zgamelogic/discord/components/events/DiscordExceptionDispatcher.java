@@ -42,11 +42,11 @@ class DiscordExceptionDispatcher implements GenericApplicationListener {
         if (!(event instanceof DiscordExceptionEvent e)) return;
         if(e.getSource().getClass() != method.getDeclaringClass()) return;
         if(!supportedExceptions.contains(e.getException().getClass())) return;
-        if(!methodKey.equals(e.getKey())) return;
+        Model model = new Model();
+        Object[] params = resolveParamsForExceptionMethod(method, e.getEvent(), model, e.getException());
+        if(!methodKey.matches(e.getEvent(), method, params)) return;
         try {
-            Model model = new Model();
             Object bean = applicationContext.getBean(beanName);
-            Object[] params = resolveParamsForExceptionMethod(method, e.getEvent(), model, e.getException());
             String returned = method.invoke(bean, params) instanceof String document ? document : null;
             ironWood.replyToEvent(returned, ann, method, model, e.getEvent());
         } catch (Exception ex) {
