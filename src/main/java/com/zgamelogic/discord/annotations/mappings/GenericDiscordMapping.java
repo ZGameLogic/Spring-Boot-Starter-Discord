@@ -3,6 +3,7 @@ package com.zgamelogic.discord.annotations.mappings;
 import com.zgamelogic.discord.components.events.DiscordEvent;
 import net.dv8tion.jda.api.events.Event;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -30,4 +31,11 @@ public @interface GenericDiscordMapping {
      * @return Document name to respond with
      */
     String document() default "";
+
+    /**
+     * Spring Expression Language (SpEL) expression that overrides the default matching behavior
+     * @return Spring Expression Language (SpEL) expression that overrides the default matching behavior
+     */
+    @AliasFor(annotation = EventListener.class, attribute = "condition")
+    String condition() default "";
 }

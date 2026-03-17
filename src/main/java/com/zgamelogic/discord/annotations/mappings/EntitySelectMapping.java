@@ -38,4 +38,11 @@ public @interface EntitySelectMapping {
      * @return Document name to respond with
      */
     String document() default "";
+
+    /**
+     * Spring Expression Language (SpEL) expression that overrides the default matching behavior
+     * @return Spring Expression Language (SpEL) expression that overrides the default matching behavior
+     */
+    @AliasFor(annotation = EventListener.class, attribute = "condition")
+    String condition() default "";
 }

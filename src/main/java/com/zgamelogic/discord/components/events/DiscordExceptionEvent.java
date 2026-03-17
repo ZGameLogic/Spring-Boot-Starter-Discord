@@ -5,13 +5,11 @@ import org.springframework.context.ApplicationEvent;
 
 public class DiscordExceptionEvent extends ApplicationEvent {
     private final GenericEvent event;
-    private final DiscordEventKey key;
     private final Throwable exception;
 
-    public DiscordExceptionEvent(Object source, GenericEvent event, DiscordEventKey key, Throwable exception) {
+    public DiscordExceptionEvent(Object source, GenericEvent event, Throwable exception) {
         super(source);
         this.event = event;
-        this.key = key;
         this.exception = exception;
     }
 
@@ -21,9 +19,5 @@ public class DiscordExceptionEvent extends ApplicationEvent {
 
     public Throwable getException() {
         return exception;
-    }
-
-    public DiscordEventKey getKey() {
-        return key;
     }
 }

@@ -49,4 +49,11 @@ public @interface SlashCommandAutocompleteMapping {
      * @return The custom name of the focused option given to an interaction ot identify the event to catch
      */
     String focused() default "";
+
+    /**
+     * Spring Expression Language (SpEL) expression that overrides the default matching behavior
+     * @return Spring Expression Language (SpEL) expression that overrides the default matching behavior
+     */
+    @AliasFor(annotation = EventListener.class, attribute = "condition")
+    String condition() default "";
 }
