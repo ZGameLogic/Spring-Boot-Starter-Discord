@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.components.container.Container;
 import net.dv8tion.jda.api.components.label.Label;
 import net.dv8tion.jda.api.components.selections.EntitySelectMenu;
 import net.dv8tion.jda.api.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
 import net.dv8tion.jda.api.components.textinput.TextInput;
 import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -96,7 +97,6 @@ public class IronWood {
     }
 
     public Object generate(String documentName, Model model) throws ParserConfigurationException, IOException, SAXException {
-        // TODO fix the xsd to support thymleaf syntax
         String document = templateEngine.process(documentName, model.getContext());
         /*
         Possible ideas to make this better
@@ -201,7 +201,8 @@ public class IronWood {
         }
         return eb.build();
     }
-
+    // TODO Radio group/Radio button
+    // TODO Checkbox
     public Modal generateModal(Element root) {
         String id = root.getAttribute("id");
         String title = root.getAttribute("title");
@@ -210,19 +211,29 @@ public class IronWood {
         for(int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
             if(child.getNodeType() != Node.ELEMENT_NODE) continue;
-            if(child.getNodeName().equals("select")){
-                String menuLabel = ((Element)child).getAttribute("label");
-                modal.addComponents(Label.of(menuLabel, generateStringSelectMenu(child)));
-                continue;
-            }
-            if(child.getNodeName().equals("entity-select")){
-                String menuLabel = ((Element)child).getAttribute("label");
-                modal.addComponents(Label.of(menuLabel, generateEntitySelectMenu(child)));
-                continue;
+            switch (child.getNodeName()) {
+                case "display" -> {
+                    TextDisplay display = TextDisplay.of(child.getTextContent());
+                    modal.addComponents(display);
+                    continue;
+                }
+                case "select" -> {
+                    String textLabelDesc = ((Element)child).getAttribute("label-desc");
+                    String menuLabel = ((Element) child).getAttribute("label");
+                    modal.addComponents(Label.of(menuLabel, textLabelDesc.isEmpty() ? null : textLabelDesc, generateStringSelectMenu(child)));
+                    continue;
+                }
+                case "entity-select" -> {
+                    String textLabelDesc = ((Element)child).getAttribute("label-desc");
+                    String menuLabel = ((Element) child).getAttribute("label");
+                    modal.addComponents(Label.of(menuLabel, textLabelDesc.isEmpty() ? null : textLabelDesc, generateEntitySelectMenu(child)));
+                    continue;
+                }
             }
             if(!child.getNodeName().equals("input")) continue;
             String textId = ((Element)child).getAttribute("id");
             String textLabel = ((Element)child).getAttribute("label");
+            String textLabelDesc = ((Element)child).getAttribute("label-desc");
             TextInputStyle textStyle = ((Element)child).getAttribute("style").toLowerCase().trim().equals("paragraph") ? TextInputStyle.PARAGRAPH : TextInputStyle.SHORT;
             String textRequired = ((Element)child).getAttribute("required");
             String textMinLength = ((Element)child).getAttribute("min-length");
@@ -240,16 +251,21 @@ public class IronWood {
                 textBuilder.setValue(textValue);
             if(!textPlaceholder.isEmpty())
                 textBuilder.setPlaceholder(textPlaceholder);
-            modal.addComponents(Label.of(textLabel, textBuilder.build()));
+            modal.addComponents(Label.of(textLabel, textLabelDesc.isEmpty() ? null : textLabelDesc, textBuilder.build()));
         }
         return modal.build();
     }
 
     private StringSelectMenu generateStringSelectMenu(Node node){
-        // TODO make this handle more options
         String id = ((Element)node).getAttribute("id");
         StringSelectMenu.Builder menu = StringSelectMenu.create(id);
         String placeholder = ((Element)node).getAttribute("placeholder");
+        String maxString = ((Element)node).getAttribute("max");
+        String minString = ((Element)node).getAttribute("min");
+        String requiredString = ((Element)node).getAttribute("required");
+        if(!maxString.isEmpty()) menu.setMaxValues(Integer.parseInt(maxString));
+        if(!minString.isEmpty()) menu.setMinValues(Integer.parseInt(minString));
+        if(!requiredString.isEmpty()) menu.setRequired(Boolean.parseBoolean(requiredString));
         if(!placeholder.isEmpty()) menu.setPlaceholder(placeholder);
         NodeList children = node.getChildNodes();
         for(int i = 0; i < children.getLength(); i++) {
@@ -265,17 +281,22 @@ public class IronWood {
     }
 
     private EntitySelectMenu generateEntitySelectMenu(Node node) {
-        // TODO make this handle more options
         String id = ((Element)node).getAttribute("id");
         String targetsString = ((Element)node).getAttribute("targets");
         boolean role = targetsString.contains("role");
         boolean user = targetsString.contains("user");
         boolean channel = targetsString.contains("channel");
+        String maxString = ((Element)node).getAttribute("max");
+        String minString = ((Element)node).getAttribute("min");
+        String requiredString = ((Element)node).getAttribute("required");
         List<EntitySelectMenu.SelectTarget> targets = new ArrayList<>();
         if(role) targets.add(EntitySelectMenu.SelectTarget.ROLE);
         if(user) targets.add(EntitySelectMenu.SelectTarget.USER);
         if(channel) targets.add(EntitySelectMenu.SelectTarget.CHANNEL);
         EntitySelectMenu.Builder menu = EntitySelectMenu.create(id, targets);
+        if(!maxString.isEmpty()) menu.setMaxValues(Integer.parseInt(maxString));
+        if(!minString.isEmpty()) menu.setMinValues(Integer.parseInt(minString));
+        if(!requiredString.isEmpty()) menu.setRequired(Boolean.parseBoolean(requiredString));
         return menu.build();
     }
 }

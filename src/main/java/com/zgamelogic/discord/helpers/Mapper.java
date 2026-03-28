@@ -2,10 +2,7 @@ package com.zgamelogic.discord.helpers;
 
 import com.zgamelogic.discord.annotations.EventProperty;
 import com.zgamelogic.discord.services.ironwood.Model;
-import net.dv8tion.jda.api.entities.IMentionable;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -99,6 +96,7 @@ public abstract class Mapper {
                 Channel.class,
                 Role.class,
                 IMentionable.class,
+                Mentions.class,
                 Message.Attachment.class
         ).contains(clazz);
     }
