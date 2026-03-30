@@ -1,5 +1,6 @@
 package com.zgamelogic.discord.components.events;
 
+import com.zgamelogic.discord.services.ResourceService;
 import com.zgamelogic.discord.services.ironwood.IronWood;
 import com.zgamelogic.discord.services.ironwood.Model;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -22,12 +23,14 @@ class DiscordEventDispatcher implements GenericApplicationListener {
     private final DiscordEventKey methodKey;
     private final String beanName;
     private final IronWood ironWood;
+    private final ResourceService resourceService;
     private final Annotation ann;
 
     DiscordEventDispatcher(String beanName, Method method, Annotation ann, ApplicationContext applicationContext) {
         this.beanName = beanName;
         this.method = method;
         this.ironWood = applicationContext.getBean(IronWood.class);
+        this.resourceService = applicationContext.getBean(ResourceService.class);
         methodKey = new DiscordEventKey(ann, method);
         this.applicationContext = applicationContext;
         this.ann = ann;
@@ -37,6 +40,7 @@ class DiscordEventDispatcher implements GenericApplicationListener {
     public void onApplicationEvent(@NotNull ApplicationEvent event) {
         if (!(event instanceof DiscordEvent e)) return;
         Model model = new Model();
+        model.addContext("emojis", resourceService.getEmojiMap());
         Object[] params = resolveParamsForControllerMethod(method, e.getEvent(), model);
         if (!methodKey.matches(e.getEvent(), method, params)) return;
         Object bean = applicationContext.getBean(beanName);
