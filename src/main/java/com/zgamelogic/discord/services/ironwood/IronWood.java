@@ -214,8 +214,7 @@ public class IronWood {
         }
         return eb.build();
     }
-    // TODO Radio group/Radio button
-    // TODO Checkbox
+
     public Modal generateModal(Element root) {
         String id = root.getAttribute("id");
         String title = root.getAttribute("title");

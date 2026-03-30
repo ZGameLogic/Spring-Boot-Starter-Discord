@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 
+import java.awt.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
@@ -72,13 +73,17 @@ public abstract class Mapper {
             ModalMapping mapping = modalEvent.getValue(name);
             if(mapping == null) return null;
             return switch(mapping.getType()){
-                case TEXT_INPUT -> mapping.getAsString();
+                case TEXT_INPUT, RADIO_GROUP -> mapping.getAsString();
                 case STRING_SELECT -> {
                    List<String> list = mapping.getAsStringList();
                    if(list.size() == 1) yield list.getFirst();
                    yield list;
                 }
                 case MENTIONABLE_SELECT -> mapping.getAsMentions();
+                case CHANNEL_SELECT -> mapping.getAsMentions().getChannels();
+                case ROLE_SELECT -> mapping.getAsMentions().getRoles();
+                case USER_SELECT -> mapping.getAsMentions().getUsers();
+                case CHECKBOX_GROUP -> mapping.getAsStringList();
                 default -> null;
             };
         }
@@ -97,7 +102,8 @@ public abstract class Mapper {
                 Role.class,
                 IMentionable.class,
                 Mentions.class,
-                Message.Attachment.class
+                Message.Attachment.class,
+                List.class
         ).contains(clazz);
     }
 
