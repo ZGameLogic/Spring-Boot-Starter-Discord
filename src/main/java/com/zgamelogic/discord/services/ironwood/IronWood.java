@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -127,7 +129,13 @@ public class IronWood {
         MessagePollBuilder pb = new MessagePollBuilder(title);
         boolean multiAnswer = Boolean.parseBoolean(root.getAttribute("multiAnswer"));
         pb.setMultiAnswer(multiAnswer);
-        // TODO duration
+        String duration = root.getAttribute("duration");
+        String unit = root.getAttribute("duration-unit");
+        if(!duration.isEmpty()) {
+            long dur = Long.parseLong(duration);
+            ChronoUnit cUnit = unit.isEmpty() ? ChronoUnit.DAYS : ChronoUnit.valueOf(unit.toUpperCase());
+            pb.setDuration(Duration.of(dur, cUnit));
+        }
         NodeList children = root.getChildNodes();
         for(int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
@@ -215,43 +223,41 @@ public class IronWood {
                 case "display" -> {
                     TextDisplay display = TextDisplay.of(child.getTextContent());
                     modal.addComponents(display);
-                    continue;
                 }
                 case "select" -> {
                     String textLabelDesc = ((Element)child).getAttribute("label-desc");
                     String menuLabel = ((Element) child).getAttribute("label");
                     modal.addComponents(Label.of(menuLabel, textLabelDesc.isEmpty() ? null : textLabelDesc, generateStringSelectMenu(child)));
-                    continue;
                 }
                 case "entity-select" -> {
                     String textLabelDesc = ((Element)child).getAttribute("label-desc");
                     String menuLabel = ((Element) child).getAttribute("label");
                     modal.addComponents(Label.of(menuLabel, textLabelDesc.isEmpty() ? null : textLabelDesc, generateEntitySelectMenu(child)));
-                    continue;
+                }
+                case "input" -> {
+                    String textId = ((Element)child).getAttribute("id");
+                    String textLabel = ((Element)child).getAttribute("label");
+                    String textLabelDesc = ((Element)child).getAttribute("label-desc");
+                    TextInputStyle textStyle = ((Element)child).getAttribute("style").toLowerCase().trim().equals("paragraph") ? TextInputStyle.PARAGRAPH : TextInputStyle.SHORT;
+                    String textRequired = ((Element)child).getAttribute("required");
+                    String textMinLength = ((Element)child).getAttribute("min-length");
+                    String textMaxLength = ((Element)child).getAttribute("max-length");
+                    String textValue = ((Element)child).getAttribute("value");
+                    String textPlaceholder = ((Element)child).getAttribute("placeholder");
+                    TextInput.Builder textBuilder = TextInput.create(textId, textStyle);
+                    if(!textRequired.isEmpty())
+                        textBuilder.setRequired(Boolean.parseBoolean(textRequired));
+                    if(!textMinLength.isEmpty())
+                        textBuilder.setMinLength(Integer.parseInt(textMinLength));
+                    if(!textMaxLength.isEmpty())
+                        textBuilder.setMaxLength(Integer.parseInt(textMaxLength));
+                    if(!textValue.isEmpty())
+                        textBuilder.setValue(textValue);
+                    if(!textPlaceholder.isEmpty())
+                        textBuilder.setPlaceholder(textPlaceholder);
+                    modal.addComponents(Label.of(textLabel, textLabelDesc.isEmpty() ? null : textLabelDesc, textBuilder.build()));
                 }
             }
-            if(!child.getNodeName().equals("input")) continue;
-            String textId = ((Element)child).getAttribute("id");
-            String textLabel = ((Element)child).getAttribute("label");
-            String textLabelDesc = ((Element)child).getAttribute("label-desc");
-            TextInputStyle textStyle = ((Element)child).getAttribute("style").toLowerCase().trim().equals("paragraph") ? TextInputStyle.PARAGRAPH : TextInputStyle.SHORT;
-            String textRequired = ((Element)child).getAttribute("required");
-            String textMinLength = ((Element)child).getAttribute("min-length");
-            String textMaxLength = ((Element)child).getAttribute("max-length");
-            String textValue = ((Element)child).getAttribute("value");
-            String textPlaceholder = ((Element)child).getAttribute("placeholder");
-            TextInput.Builder textBuilder = TextInput.create(textId, textStyle);
-            if(!textRequired.isEmpty())
-                textBuilder.setRequired(Boolean.parseBoolean(textRequired));
-            if(!textMinLength.isEmpty())
-                textBuilder.setMinLength(Integer.parseInt(textMinLength));
-            if(!textMaxLength.isEmpty())
-                textBuilder.setMaxLength(Integer.parseInt(textMaxLength));
-            if(!textValue.isEmpty())
-                textBuilder.setValue(textValue);
-            if(!textPlaceholder.isEmpty())
-                textBuilder.setPlaceholder(textPlaceholder);
-            modal.addComponents(Label.of(textLabel, textLabelDesc.isEmpty() ? null : textLabelDesc, textBuilder.build()));
         }
         return modal.build();
     }
