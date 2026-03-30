@@ -23,6 +23,11 @@
     "type": "java.lang.String",
     "description": "Discord bot member cache policy.",
     "defaultValue": ""
+  },{
+    "name": "discord.resources.emoji",
+    "type": "java.lang.String",
+    "description": "resources path to the emojis folder to be managed by SBSD resource service.",
+    "defaultValue": "assets/emojis"
   }],
   "hints": [{
     "name": "discord.gateway-intents",

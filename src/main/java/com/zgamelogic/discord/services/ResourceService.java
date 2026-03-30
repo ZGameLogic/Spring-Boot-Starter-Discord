@@ -5,6 +5,9 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Icon;
 import net.dv8tion.jda.api.entities.emoji.ApplicationEmoji;
 import net.dv8tion.jda.api.entities.emoji.CustomEmoji;
+import net.dv8tion.jda.api.events.emoji.EmojiAddedEvent;
+import net.dv8tion.jda.api.events.emoji.EmojiRemovedEvent;
+import net.dv8tion.jda.api.events.emoji.update.EmojiUpdateNameEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +34,22 @@ public class ResourceService {
     @GenericDiscordMapping(event = ReadyEvent.class)
     public void ready(ReadyEvent event) throws IOException {
         loadEmojis(event.getJDA());
+    }
+
+    @GenericDiscordMapping(event = EmojiAddedEvent.class)
+    public void emojiAdd(EmojiAddedEvent event){
+        emojiMap.put(event.getEmoji().getName(), event.getEmoji().getAsMention());
+    }
+
+    @GenericDiscordMapping(event = EmojiRemovedEvent.class)
+    public void emojiRemove(EmojiRemovedEvent event){
+        emojiMap.remove(event.getEmoji().getName());
+    }
+
+    @GenericDiscordMapping(event = EmojiUpdateNameEvent.class)
+    public void emojiUpdate(EmojiUpdateNameEvent event){
+        emojiMap.remove(event.getOldName());
+        emojiMap.put(event.getNewName(), event.getEmoji().getAsMention());
     }
 
     private void loadEmojis(JDA bot) throws IOException {
