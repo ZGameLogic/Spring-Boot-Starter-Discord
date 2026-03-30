@@ -2,8 +2,12 @@ package com.zgamelogic.discord.services.ironwood;
 
 import com.zgamelogic.discord.annotations.mappings.*;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.checkboxgroup.CheckboxGroup;
+import net.dv8tion.jda.api.components.checkboxgroup.CheckboxGroupOption;
 import net.dv8tion.jda.api.components.container.Container;
 import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.radiogroup.RadioGroup;
+import net.dv8tion.jda.api.components.radiogroup.RadioGroupOption;
 import net.dv8tion.jda.api.components.selections.EntitySelectMenu;
 import net.dv8tion.jda.api.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
@@ -37,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.List;
 
 @Service
 public class IronWood {
@@ -223,6 +228,48 @@ public class IronWood {
                 case "display" -> {
                     TextDisplay display = TextDisplay.of(child.getTextContent());
                     modal.addComponents(display);
+                }
+                case "radio-group" -> {
+                    String groupId = ((Element)child).getAttribute("id");
+                    String label = ((Element)child).getAttribute("label");
+                    String labelDesc = ((Element)child).getAttribute("label-desc");
+                    RadioGroup.Builder group = RadioGroup.create(groupId);
+                    String requiredString = ((Element)child).getAttribute("required");
+                    if(!requiredString.isEmpty()) group.setRequired(Boolean.parseBoolean(requiredString));
+                    NodeList options = child.getChildNodes();
+                    for(int j = 0; j < options.getLength(); j++) {
+                        Node optionNode = options.item(j);
+                        if(!optionNode.getNodeName().equals("radio")) continue;
+                        String bLabel = ((Element)optionNode).getAttribute("label");
+                        String bValue = ((Element)optionNode).getAttribute("value");
+                        String bDesc = ((Element)optionNode).getAttribute("description");
+                        boolean bDefault = Boolean.parseBoolean(((Element)optionNode).getAttribute("default"));
+                        group.addOptions(RadioGroupOption.of(bLabel, bValue, bDesc.isEmpty() ? null : bDesc, bDefault));
+                    }
+                    modal.addComponents(Label.of(label, labelDesc.isEmpty() ? null : labelDesc, group.build()));
+                }
+                case "checkbox-group" -> {
+                    String groupId = ((Element)child).getAttribute("id");
+                    String label = ((Element)child).getAttribute("label");
+                    String labelDesc = ((Element)child).getAttribute("label-desc");
+                    CheckboxGroup.Builder group = CheckboxGroup.create(groupId);
+                    String maxString = ((Element)child).getAttribute("max");
+                    String minString = ((Element)child).getAttribute("min");
+                    String requiredString = ((Element)child).getAttribute("required");
+                    if(!maxString.isEmpty()) group.setMaxValues(Integer.parseInt(maxString));
+                    if(!minString.isEmpty()) group.setMinValues(Integer.parseInt(minString));
+                    if(!requiredString.isEmpty()) group.setRequired(Boolean.parseBoolean(requiredString));
+                    NodeList options = child.getChildNodes();
+                    for(int j = 0; j < options.getLength(); j++) {
+                        Node optionNode = options.item(j);
+                        if(!optionNode.getNodeName().equals("checkbox")) continue;
+                        String bLabel = ((Element)optionNode).getAttribute("label");
+                        String bValue = ((Element)optionNode).getAttribute("value");
+                        String bDesc = ((Element)optionNode).getAttribute("description");
+                        boolean checked = Boolean.parseBoolean(((Element)optionNode).getAttribute("checked"));
+                        group.addOptions(CheckboxGroupOption.of(bLabel, bValue, bDesc.isEmpty() ? null : bDesc, checked));
+                    }
+                    modal.addComponents(Label.of(label, labelDesc.isEmpty() ? null : labelDesc, group.build()));
                 }
                 case "select" -> {
                     String textLabelDesc = ((Element)child).getAttribute("label-desc");
