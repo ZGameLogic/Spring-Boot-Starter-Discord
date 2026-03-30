@@ -2,8 +2,12 @@ package com.zgamelogic.discord.services.ironwood;
 
 import com.zgamelogic.discord.annotations.mappings.*;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.checkboxgroup.CheckboxGroup;
+import net.dv8tion.jda.api.components.checkboxgroup.CheckboxGroupOption;
 import net.dv8tion.jda.api.components.container.Container;
 import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.radiogroup.RadioGroup;
+import net.dv8tion.jda.api.components.radiogroup.RadioGroupOption;
 import net.dv8tion.jda.api.components.selections.EntitySelectMenu;
 import net.dv8tion.jda.api.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.components.textdisplay.TextDisplay;
@@ -34,7 +38,10 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.List;
 
 @Service
 public class IronWood {
@@ -127,7 +134,13 @@ public class IronWood {
         MessagePollBuilder pb = new MessagePollBuilder(title);
         boolean multiAnswer = Boolean.parseBoolean(root.getAttribute("multiAnswer"));
         pb.setMultiAnswer(multiAnswer);
-        // TODO duration
+        String duration = root.getAttribute("duration");
+        String unit = root.getAttribute("duration-unit");
+        if(!duration.isEmpty()) {
+            long dur = Long.parseLong(duration);
+            ChronoUnit cUnit = unit.isEmpty() ? ChronoUnit.DAYS : ChronoUnit.valueOf(unit.toUpperCase());
+            pb.setDuration(Duration.of(dur, cUnit));
+        }
         NodeList children = root.getChildNodes();
         for(int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
@@ -201,8 +214,7 @@ public class IronWood {
         }
         return eb.build();
     }
-    // TODO Radio group/Radio button
-    // TODO Checkbox
+
     public Modal generateModal(Element root) {
         String id = root.getAttribute("id");
         String title = root.getAttribute("title");
@@ -215,43 +227,83 @@ public class IronWood {
                 case "display" -> {
                     TextDisplay display = TextDisplay.of(child.getTextContent());
                     modal.addComponents(display);
-                    continue;
+                }
+                case "radio-group" -> {
+                    String groupId = ((Element)child).getAttribute("id");
+                    String label = ((Element)child).getAttribute("label");
+                    String labelDesc = ((Element)child).getAttribute("label-desc");
+                    RadioGroup.Builder group = RadioGroup.create(groupId);
+                    String requiredString = ((Element)child).getAttribute("required");
+                    if(!requiredString.isEmpty()) group.setRequired(Boolean.parseBoolean(requiredString));
+                    NodeList options = child.getChildNodes();
+                    for(int j = 0; j < options.getLength(); j++) {
+                        Node optionNode = options.item(j);
+                        if(!optionNode.getNodeName().equals("radio")) continue;
+                        String bLabel = ((Element)optionNode).getAttribute("label");
+                        String bValue = ((Element)optionNode).getAttribute("value");
+                        String bDesc = ((Element)optionNode).getAttribute("description");
+                        boolean bDefault = Boolean.parseBoolean(((Element)optionNode).getAttribute("default"));
+                        group.addOptions(RadioGroupOption.of(bLabel, bValue, bDesc.isEmpty() ? null : bDesc, bDefault));
+                    }
+                    modal.addComponents(Label.of(label, labelDesc.isEmpty() ? null : labelDesc, group.build()));
+                }
+                case "checkbox-group" -> {
+                    String groupId = ((Element)child).getAttribute("id");
+                    String label = ((Element)child).getAttribute("label");
+                    String labelDesc = ((Element)child).getAttribute("label-desc");
+                    CheckboxGroup.Builder group = CheckboxGroup.create(groupId);
+                    String maxString = ((Element)child).getAttribute("max");
+                    String minString = ((Element)child).getAttribute("min");
+                    String requiredString = ((Element)child).getAttribute("required");
+                    if(!maxString.isEmpty()) group.setMaxValues(Integer.parseInt(maxString));
+                    if(!minString.isEmpty()) group.setMinValues(Integer.parseInt(minString));
+                    if(!requiredString.isEmpty()) group.setRequired(Boolean.parseBoolean(requiredString));
+                    NodeList options = child.getChildNodes();
+                    for(int j = 0; j < options.getLength(); j++) {
+                        Node optionNode = options.item(j);
+                        if(!optionNode.getNodeName().equals("checkbox")) continue;
+                        String bLabel = ((Element)optionNode).getAttribute("label");
+                        String bValue = ((Element)optionNode).getAttribute("value");
+                        String bDesc = ((Element)optionNode).getAttribute("description");
+                        boolean checked = Boolean.parseBoolean(((Element)optionNode).getAttribute("checked"));
+                        group.addOptions(CheckboxGroupOption.of(bLabel, bValue, bDesc.isEmpty() ? null : bDesc, checked));
+                    }
+                    modal.addComponents(Label.of(label, labelDesc.isEmpty() ? null : labelDesc, group.build()));
                 }
                 case "select" -> {
                     String textLabelDesc = ((Element)child).getAttribute("label-desc");
                     String menuLabel = ((Element) child).getAttribute("label");
                     modal.addComponents(Label.of(menuLabel, textLabelDesc.isEmpty() ? null : textLabelDesc, generateStringSelectMenu(child)));
-                    continue;
                 }
                 case "entity-select" -> {
                     String textLabelDesc = ((Element)child).getAttribute("label-desc");
                     String menuLabel = ((Element) child).getAttribute("label");
                     modal.addComponents(Label.of(menuLabel, textLabelDesc.isEmpty() ? null : textLabelDesc, generateEntitySelectMenu(child)));
-                    continue;
+                }
+                case "input" -> {
+                    String textId = ((Element)child).getAttribute("id");
+                    String textLabel = ((Element)child).getAttribute("label");
+                    String textLabelDesc = ((Element)child).getAttribute("label-desc");
+                    TextInputStyle textStyle = ((Element)child).getAttribute("style").toLowerCase().trim().equals("paragraph") ? TextInputStyle.PARAGRAPH : TextInputStyle.SHORT;
+                    String textRequired = ((Element)child).getAttribute("required");
+                    String textMinLength = ((Element)child).getAttribute("min-length");
+                    String textMaxLength = ((Element)child).getAttribute("max-length");
+                    String textValue = ((Element)child).getAttribute("value");
+                    String textPlaceholder = ((Element)child).getAttribute("placeholder");
+                    TextInput.Builder textBuilder = TextInput.create(textId, textStyle);
+                    if(!textRequired.isEmpty())
+                        textBuilder.setRequired(Boolean.parseBoolean(textRequired));
+                    if(!textMinLength.isEmpty())
+                        textBuilder.setMinLength(Integer.parseInt(textMinLength));
+                    if(!textMaxLength.isEmpty())
+                        textBuilder.setMaxLength(Integer.parseInt(textMaxLength));
+                    if(!textValue.isEmpty())
+                        textBuilder.setValue(textValue);
+                    if(!textPlaceholder.isEmpty())
+                        textBuilder.setPlaceholder(textPlaceholder);
+                    modal.addComponents(Label.of(textLabel, textLabelDesc.isEmpty() ? null : textLabelDesc, textBuilder.build()));
                 }
             }
-            if(!child.getNodeName().equals("input")) continue;
-            String textId = ((Element)child).getAttribute("id");
-            String textLabel = ((Element)child).getAttribute("label");
-            String textLabelDesc = ((Element)child).getAttribute("label-desc");
-            TextInputStyle textStyle = ((Element)child).getAttribute("style").toLowerCase().trim().equals("paragraph") ? TextInputStyle.PARAGRAPH : TextInputStyle.SHORT;
-            String textRequired = ((Element)child).getAttribute("required");
-            String textMinLength = ((Element)child).getAttribute("min-length");
-            String textMaxLength = ((Element)child).getAttribute("max-length");
-            String textValue = ((Element)child).getAttribute("value");
-            String textPlaceholder = ((Element)child).getAttribute("placeholder");
-            TextInput.Builder textBuilder = TextInput.create(textId, textStyle);
-            if(!textRequired.isEmpty())
-                textBuilder.setRequired(Boolean.parseBoolean(textRequired));
-            if(!textMinLength.isEmpty())
-                textBuilder.setMinLength(Integer.parseInt(textMinLength));
-            if(!textMaxLength.isEmpty())
-                textBuilder.setMaxLength(Integer.parseInt(textMaxLength));
-            if(!textValue.isEmpty())
-                textBuilder.setValue(textValue);
-            if(!textPlaceholder.isEmpty())
-                textBuilder.setPlaceholder(textPlaceholder);
-            modal.addComponents(Label.of(textLabel, textLabelDesc.isEmpty() ? null : textLabelDesc, textBuilder.build()));
         }
         return modal.build();
     }

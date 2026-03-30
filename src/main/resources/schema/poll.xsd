@@ -6,6 +6,18 @@
         elementFormDefault="qualified"
 >
 
+    <xs:simpleType name="durationTarget">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="day"/>
+            <xs:enumeration value="hour"/>
+            <xs:enumeration value="minute"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="durationUnitList">
+        <xs:list itemType="durationTarget"/>
+    </xs:simpleType>
+
     <xs:element name="poll">
         <xs:complexType>
             <xs:sequence>
@@ -14,6 +26,8 @@
 
             <xs:attribute name="title" type="xs:string" use="required"/>
             <xs:attribute name="multiAnswer" type="xs:boolean"/>
+            <xs:attribute name="duration" type="xs:long"/>
+            <xs:attribute name="duration-unit" type="durationUnitList"/>
 
         </xs:complexType>
     </xs:element>
