@@ -8,6 +8,9 @@ Spring boot starter discord is a spring initializer that integrates [JDA](https:
 | Spring-Boot | 3.5.11  |
 | JDA         |  6.4.0  |
 
+**--__NOTE__--**
+The documentation is being moved over to this Repos [wiki](https://github.com/ZGameLogic/Spring-Boot-Starter-Discord/wiki). The most up to date versions of the documentation will be hosted there. 
+
 ## Setup
 1. Add this dependency to your pom.xml file
 ```xml
