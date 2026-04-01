@@ -1,5 +1,7 @@
 package com.zgamelogic.discord.services.ironwood;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.zgamelogic.discord.annotations.mappings.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.checkboxgroup.CheckboxGroup;
@@ -27,14 +29,16 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.w3c.dom.*;
-import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamReader;
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
@@ -59,7 +63,7 @@ public class IronWood {
     }
 
     public void replyToEvent(String documentName, Annotation ann, Method method, Model model, GenericEvent event) {
-        documentName = extractDocument(documentName, ann, method);
+        documentName = extractDocumentName(documentName, ann, method);
         if(documentName == null || documentName.isEmpty()) return;
         try {
             Object messageData = generate(documentName, model);
@@ -84,7 +88,7 @@ public class IronWood {
         }
     }
 
-    private String extractDocument(String documentName, Annotation ann, Method method) {
+    private String extractDocumentName(String documentName, Annotation ann, Method method) {
         if(documentName == null) {
             if(method.isAnnotationPresent(com.zgamelogic.discord.annotations.mappings.Document.class))
                 ann = method.getAnnotation(com.zgamelogic.discord.annotations.mappings.Document.class);
@@ -105,23 +109,27 @@ public class IronWood {
 
     public Object generate(String documentName, Model model) throws ParserConfigurationException, IOException, SAXException {
         String document = templateEngine.process(documentName, model.getContext());
-        /*
-        Possible ideas to make this better
-        resolve emoji references? likes ${em:emoji_name} will turn into the mentionable?
-         */
-        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(document.getBytes(StandardCharsets.UTF_8)));
-        doc.getDocumentElement().normalize();
-        Element root = doc.getDocumentElement();
-        return switch (root.getTagName()) {
-            case "embed" -> generateEmbed(root);
-            case "component" -> generateComponent(root);
-            case "modal" -> generateModal(root);
-            case "poll" -> generatePoll(root);
-            default -> {
-                log.warn("Unknown IronWood document type: {}", root.getTagName());
-                yield null;
-            }
+        XmlMapper xmlMapper = new XmlMapper();
+        return switch(readRootElementName(document)){
+            case "modal" -> xmlMapper.readValue(document, Object.class);
+            case "embed" -> xmlMapper.readValue(document, Object.class);
+            case "poll" -> xmlMapper.readValue(document, Object.class);
+            case "component" -> xmlMapper.readValue(document, Object.class);
+            default -> null;
         };
+    }
+
+    private String readRootElementName(String xml) {
+        XMLInputFactory factory = XMLInputFactory.newFactory();
+        try (InputStream in = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
+            XMLStreamReader reader = factory.createXMLStreamReader(in);
+            while (reader.hasNext()) {
+                if (reader.next() == XMLStreamConstants.START_ELEMENT) {
+                    return reader.getLocalName();
+                }
+            }
+        } catch (Exception _) {}
+        return null;
     }
 
     public Container generateComponent(Element root) {
@@ -162,11 +170,6 @@ public class IronWood {
             String url = ((Element)titleNode).getAttribute("url");
             if(!title.isEmpty())
                 eb.setTitle(title, url.isEmpty() ? null : url);
-        });
-        Optional.ofNullable(root.getElementsByTagName("description").item(0)).ifPresent(descriptionNode -> {
-            String description = descriptionNode.getTextContent();
-            if(!description.isEmpty())
-                eb.setDescription(description);
         });
         Optional.ofNullable(root.getElementsByTagName("author").item(0)).ifPresent(authorNode -> {
             String author = authorNode.getTextContent();
