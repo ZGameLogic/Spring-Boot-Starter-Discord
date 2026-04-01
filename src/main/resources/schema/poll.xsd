@@ -21,7 +21,7 @@
     <xs:element name="poll">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="answer" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+                <xs:element name="option" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
             </xs:sequence>
 
             <xs:attribute name="title" type="xs:string" use="required"/>

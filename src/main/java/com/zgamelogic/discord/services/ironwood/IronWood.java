@@ -1,6 +1,5 @@
 package com.zgamelogic.discord.services.ironwood;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.zgamelogic.discord.annotations.mappings.*;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -20,7 +19,6 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IModalCallback;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.modals.Modal;
-import net.dv8tion.jda.api.utils.messages.MessagePollBuilder;
 import net.dv8tion.jda.api.utils.messages.MessagePollData;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,8 +40,6 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 
@@ -110,14 +106,14 @@ public class IronWood {
     public Object generate(String documentName, Model model) throws ParserConfigurationException, IOException, SAXException {
         String document = templateEngine.process(documentName, model.getContext());
         XmlMapper xmlMapper = new XmlMapper();
-        System.out.println(xmlMapper.readValue(document, XmlPoll.class));
-        return switch(readRootElementName(document)){
-            case "modal" -> xmlMapper.readValue(document, Object.class);
-            case "embed" -> xmlMapper.readValue(document, Object.class);
+        XmlDiscord component = switch(readRootElementName(document)){
+            case "modal" -> xmlMapper.readValue(document, XmlModal.class);
+            case "embed" -> xmlMapper.readValue(document, XmlEmbed.class);
             case "poll" -> xmlMapper.readValue(document, XmlPoll.class);
-            case "component" -> xmlMapper.readValue(document, Object.class);
+            case "component" -> xmlMapper.readValue(document, XmlComponent.class);
             default -> null;
         };
+        return component.toComponent();
     }
 
     private String readRootElementName(String xml) {
@@ -136,29 +132,6 @@ public class IronWood {
     public Container generateComponent(Element root) {
         // TODO implement
         return null;
-    }
-
-    private MessagePollData generatePoll(Element root) {
-        String title = root.getAttribute("title");
-        MessagePollBuilder pb = new MessagePollBuilder(title);
-        boolean multiAnswer = Boolean.parseBoolean(root.getAttribute("multiAnswer"));
-        pb.setMultiAnswer(multiAnswer);
-        String duration = root.getAttribute("duration");
-        String unit = root.getAttribute("duration-unit");
-        if(!duration.isEmpty()) {
-            long dur = Long.parseLong(duration);
-            ChronoUnit cUnit = unit.isEmpty() ? ChronoUnit.DAYS : ChronoUnit.valueOf(unit.toUpperCase());
-            pb.setDuration(Duration.of(dur, cUnit));
-        }
-        NodeList children = root.getChildNodes();
-        for(int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() != Node.ELEMENT_NODE) continue;
-            if(!child.getNodeName().equals("option")) continue;
-            String answer = child.getTextContent();
-            pb.addAnswer(answer);
-        }
-        return pb.build();
     }
 
     private MessageEmbed generateEmbed(Element root) {
