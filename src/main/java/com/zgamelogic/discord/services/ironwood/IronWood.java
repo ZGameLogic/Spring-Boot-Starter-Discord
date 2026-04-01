@@ -110,10 +110,11 @@ public class IronWood {
     public Object generate(String documentName, Model model) throws ParserConfigurationException, IOException, SAXException {
         String document = templateEngine.process(documentName, model.getContext());
         XmlMapper xmlMapper = new XmlMapper();
+        System.out.println(xmlMapper.readValue(document, XmlPoll.class));
         return switch(readRootElementName(document)){
             case "modal" -> xmlMapper.readValue(document, Object.class);
             case "embed" -> xmlMapper.readValue(document, Object.class);
-            case "poll" -> xmlMapper.readValue(document, Object.class);
+            case "poll" -> xmlMapper.readValue(document, XmlPoll.class);
             case "component" -> xmlMapper.readValue(document, Object.class);
             default -> null;
         };

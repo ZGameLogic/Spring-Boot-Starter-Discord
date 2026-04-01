@@ -1,6 +1,7 @@
 package com.zgamelogic.discord.services;
 
 import com.zgamelogic.discord.annotations.mappings.GenericDiscordMapping;
+import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Icon;
 import net.dv8tion.jda.api.entities.emoji.ApplicationEmoji;
@@ -23,6 +24,7 @@ public class ResourceService {
 
     private final String emojiPath;
     private final ResourcePatternResolver resourcePatternResolver;
+    @Getter
     private final Map<String, String> emojiMap;
 
     public ResourceService(@Value("${discord.resources.emoji:assets/emojis}") String emojiPath, ResourcePatternResolver resourcePatternResolver) {
@@ -78,9 +80,5 @@ public class ResourceService {
             log.info("Removing unused emoji {}", emoji.getName());
             emoji.delete().queue();
         });
-    }
-
-    public Map<String, String> getEmojiMap(){
-        return emojiMap;
     }
 }
