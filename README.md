@@ -17,7 +17,7 @@ The documentation is being moved over to this Repos [wiki](https://github.com/ZG
 <dependency>
   <groupId>com.zgamelogic</groupId>
   <artifactId>spring-boot-starter-discord</artifactId>
-  <version>6.3.0</version>
+  <version>6.3.1</version>
 </dependency>
 ```
 2. Get a discord application setup in the [Discord developer portal](https://discord.com/developers/) and get a bot token.
