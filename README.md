@@ -6,7 +6,7 @@ Spring boot starter discord is a spring initializer that integrates [JDA](https:
 |-------------|:-------:|
 | Java        |   25    |
 | Spring-Boot | 3.5.11  |
-| JDA         |  6.5.0  |
+| JDA         |  6.6.0  |
 
 **--__NOTE__--**
 The documentation is being moved over to this Repos [wiki](https://github.com/ZGameLogic/Spring-Boot-Starter-Discord/wiki). The most up to date versions of the documentation will be hosted there. 
@@ -17,7 +17,7 @@ The documentation is being moved over to this Repos [wiki](https://github.com/ZG
 <dependency>
   <groupId>com.zgamelogic</groupId>
   <artifactId>spring-boot-starter-discord</artifactId>
-  <version>6.3.3</version>
+  <version>6.4.0</version>
 </dependency>
 ```
 2. Get a discord application setup in the [Discord developer portal](https://discord.com/developers/) and get a bot token.
